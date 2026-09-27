@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LM-Project ｜ 客戶端契約研究與藍隊防禦筆記</title>
+    <style>
+        :root {
+            --bg-primary: #0a0f1d;
+            --bg-secondary: #131b2e;
+            --bg-card: #1a243b;
+            --bg-card-hover: #22304e;
+            --bg-code: #070b14;
+            --border-color: #2a3756;
+            --border-accent: #3b82f6;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --accent-blue: #38bdf8;
+            --accent-cyan: #22d3ee;
+            --accent-green: #34d399;
+            --accent-amber: #fbbf24;
+            --accent-rose: #f87171;
+            --accent-purple: #c084fc;
+            --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.7;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1180px;
+            width: 100%;
+            padding: 56px 24px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 頂部導航與品牌列 */
+        .top-navbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-bottom: 28px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 48px;
+        }
+
+        .brand-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.35rem;
+            font-weight: 800;
+            color: #ffffff;
+            text-decoration: none;
+            letter-spacing: -0.01em;
+        }
+
+        .brand-badge {
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 9999px;
+            background: rgba(192, 132, 252, 0.15);
+            color: var(--accent-purple);
+            border: 1px solid rgba(192, 132, 252, 0.35);
+        }
+
+        .initiator-tag {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .initiator-name {
+            color: var(--accent-cyan);
+            font-weight: 700;
+        }
+
+        .top-nav-right {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+        }
+
+        .github-nav-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-primary);
+            text-decoration: none;
+            font-size: 0.88rem;
+            font-weight: 600;
+            padding: 7px 14px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background: rgba(255, 255, 255, 0.04);
+            transition: all 0.2s ease;
+        }
+
+        .github-nav-btn:hover {
+            color: var(--accent-cyan);
+            border-color: var(--accent-cyan);
+            background: rgba(34, 211, 238, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .github-icon {
+            display: inline-block;
+            vertical-align: middle;
+            fill: currentColor;
+            flex-shrink: 0;
+        }
+
+        /* Hero 視覺區塊 */
+        .hero-section {
+            text-align: center;
+            padding: 40px 16px 56px;
+            margin-bottom: 40px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .badge-group {
+            display: inline-flex;
+            gap: 10px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .badge {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            padding: 5px 14px;
+            border-radius: 9999px;
+            letter-spacing: 0.05em;
+        }
+
+        .badge-purple { background: rgba(192, 132, 252, 0.12); color: var(--accent-purple); border: 1px solid rgba(192, 132, 252, 0.3); }
+        .badge-cyan { background: rgba(34, 211, 238, 0.12); color: var(--accent-cyan); border: 1px solid rgba(34, 211, 238, 0.3); }
+        .badge-amber { background: rgba(251, 191, 36, 0.12); color: var(--accent-amber); border: 1px solid rgba(251, 191, 36, 0.3); }
+        .badge-green { background: rgba(52, 211, 153, 0.12); color: var(--accent-green); border: 1px solid rgba(52, 211, 153, 0.3); }
+
+        h1 {
+            font-size: 2.85rem;
+            font-weight: 800;
+            line-height: 1.25;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #ffffff 15%, #93c5fd 60%, var(--accent-blue) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-lead {
+            font-size: 1.15rem;
+            color: var(--text-secondary);
+            max-width: 860px;
+            margin: 0 auto 36px;
+            line-height: 1.75;
+        }
+
+        /* 核心行動呼籲按鈕 (Primary CTA) */
+        .hero-actions {
+            display: flex;
+            justify-content: center;
+            gap: 18px;
+            flex-wrap: wrap;
+        }
+
+        .btn-primary {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%);
+            color: #ffffff;
+            font-size: 1.12rem;
+            font-weight: 700;
+            padding: 16px 36px;
+            border-radius: 12px;
+            text-decoration: none;
+            box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.4);
+            transition: all 0.25s ease;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 16px 32px -5px rgba(37, 99, 235, 0.6);
+            background: linear-gradient(135deg, #0369a1 0%, #1d4ed8 100%);
+        }
+
+        .btn-github {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            color: #ffffff;
+            font-size: 1.05rem;
+            font-weight: 600;
+            padding: 16px 28px;
+            border-radius: 12px;
+            text-decoration: none;
+            border: 1px solid var(--border-color);
+            transition: all 0.25s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-github:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: var(--accent-cyan);
+            color: var(--accent-cyan);
+            transform: translateY(-3px);
+            box-shadow: 0 12px 25px rgba(34, 211, 238, 0.2);
+        }
+
+        .footer-github-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--accent-blue);
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        .footer-github-link:hover {
+            color: var(--accent-cyan);
+            text-decoration: underline;
+        }
+
+        /* 閱讀前提與邊界提醒卡 */
+        .callout {
+            border-left: 5px solid var(--accent-amber);
+            background: rgba(251, 191, 36, 0.08);
+            padding: 24px 28px;
+            border-radius: 0 12px 12px 0;
+            margin: 0 0 48px;
+        }
+
+        .callout-title {
+            font-weight: 700;
+            font-size: 1.05rem;
+            color: var(--accent-amber);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .callout p {
+            color: #cbd5e1;
+            font-size: 0.96rem;
+            line-height: 1.7;
+        }
+
+        /* 門戶專案模組矩陣 (Future Hub Grid) */
+        .section-header {
+            margin-bottom: 28px;
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-desc {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+        }
+
+        .hub-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 24px;
+            margin-bottom: 56px;
+        }
+
+        .hub-card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 28px;
+            display: flex;
+            flex-direction: column;
+            text-decoration: none;
+            color: inherit;
+            transition: all 0.25s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hub-card.active-card {
+            border-color: rgba(56, 189, 248, 0.4);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
+        }
+
+        .hub-card.active-card:hover {
+            border-color: var(--accent-cyan);
+            transform: translateY(-4px);
+            background-color: var(--bg-card-hover);
+            box-shadow: 0 16px 30px -8px rgba(34, 211, 238, 0.25);
+        }
+
+        .hub-card.planned-card {
+            opacity: 0.78;
+            cursor: not-allowed;
+            border-style: dashed;
+        }
+
+        .card-header-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .card-icon {
+            font-size: 1.75rem;
+        }
+
+        .card-status {
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 9999px;
+            text-transform: uppercase;
+        }
+
+        .status-live {
+            background: rgba(52, 211, 153, 0.15);
+            color: var(--accent-green);
+            border: 1px solid rgba(52, 211, 153, 0.35);
+        }
+
+        .status-planned {
+            background: rgba(148, 163, 184, 0.1);
+            color: var(--text-muted);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 10px;
+        }
+
+        .hub-card.active-card:hover .card-title {
+            color: var(--accent-cyan);
+        }
+
+        .card-desc {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            line-height: 1.65;
+            margin-bottom: 24px;
+            flex-grow: 1;
+        }
+
+        .card-action {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--accent-blue);
+        }
+
+        .hub-card.active-card:hover .card-action {
+            color: var(--accent-cyan);
+        }
+
+        footer {
+            margin-top: auto;
+            padding-top: 36px;
+            border-top: 1px solid var(--border-color);
+            text-align: center;
+            font-size: 0.92rem;
+            color: var(--text-muted);
+        }
+
+        footer p {
+            margin-bottom: 6px;
+        }
+
+        @media (max-width: 768px) {
+            .container { padding: 24px 16px; }
+            .top-navbar { flex-direction: column; align-items: flex-start; gap: 12px; margin-bottom: 22px; padding-bottom: 18px; }
+            .brand-logo, .top-nav-right { flex-wrap: wrap; }
+            .top-nav-right { gap: 12px; }
+            .hero-section { padding: 12px 0 32px; margin-bottom: 32px; }
+            .badge-group { margin-bottom: 16px; }
+            h1 { font-size: 2rem; }
+            .hero-lead { font-size: 1rem; }
+            .hero-actions > a { width: 100%; max-width: 100%; justify-content: center; padding: 14px 16px; min-height: 48px; }
+            .hub-grid { grid-template-columns: minmax(0, 1fr); }
+            .hub-card { padding: 20px; }
+            .callout { padding: 18px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 頂部品牌列 -->
+        <nav class="top-navbar">
+            <a href="index.html" class="brand-logo">
+                <span>🛡️ LM-Project</span>
+                <span class="brand-badge">Independent Lab</span>
+            </a>
+            <div class="top-nav-right">
+                <div class="initiator-tag">
+                    專案發起人：<span class="initiator-name">Enos</span>
+                </div>
+                <a href="https://github.com/enoslo19901130/LM-Project-Guidelines" target="_blank" rel="noopener noreferrer" class="github-nav-btn" title="前往 GitHub 專案倉庫">
+                    <svg class="github-icon" height="18" width="18" viewBox="0 0 16 16">
+                        <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
+                    </svg>
+                    <span>GitHub 專案倉庫</span>
+                </a>
+            </div>
+        </nav>
+
+        <!-- Hero 主視覺引導區 -->
+        <header class="hero-section">
+            <div class="badge-group">
+                <span class="badge badge-purple">LM-Project</span>
+                <span class="badge badge-cyan">本地受控樣本</span>
+                <span class="badge badge-amber">紅隊視角 × 藍隊防禦</span>
+                <span class="badge badge-green">Evidence-led</span>
+            </div>
+            <h1>LM 客戶端契約研究與防禦筆記</h1>
+            <p class="hero-lead">
+                從已取得的本地客戶端樣本與隔離測試流量，還原封包、會話和畫面狀態之間的關係；再把每個觀察轉成服務端驗證與可觀測性要求。這是一份紅隊思路的藍隊參考，不是外部系統入侵報告。
+            </p>
+            <div class="hero-actions">
+                <a href="PROTOBUF-ARCHITECTURE-AND-REVERSE-ENGINEERING-GUIDE.html" class="btn-primary">
+                    <span>閱讀協定篇與防禦檢查點</span>
+                    <span style="font-size: 1.25rem;">➔</span>
+                </a>
+                <a href="https://github.com/enoslo19901130/LM-Project-Guidelines" target="_blank" rel="noopener noreferrer" class="btn-github">
+                    <svg class="github-icon" height="20" width="20" viewBox="0 0 16 16">
+                        <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
+                    </svg>
+                    <span>GitHub 專案倉庫：LM-Project-Guidelines</span>
+                    <span style="font-size: 1.05rem; opacity: 0.8;">↗</span>
+                </a>
+            </div>
+        </header>
+
+        <!-- 研究範圍與證據界線 -->
+        <div class="callout">
+            <div class="callout-title">研究範圍與證據界線</div>
+            <p>
+                <strong>已做</strong>：在受控條件下分析本地 LM 客戶端及可取得的資料資產、比對隔離測試流量，建構自有服務端並驗證協定與狀態行為。<br>
+                <strong>未做</strong>：沒有入侵、連線存取或擷取原系統後端資料庫；文中的資料庫查詢與寫入均指自建測試環境，不能推論第三方系統遭入侵或其防禦已被繞過。文中的紅隊角色是威脅建模與學習視角，並非未經授權的攻擊紀錄。
+                <br><strong>閱讀方式</strong>：實測、推論與建議防禦分開看；下方藍隊檢查是驗證項目，並非宣稱相關控制都已部署。
+            </p>
+        </div>
+
+        <section aria-labelledby="path-title">
+            <div class="section-header">
+                <h2 class="section-title" id="path-title">從可觀察邊界到防禦驗證</h2>
+            </div>
+            <div class="hub-grid">
+                <div class="hub-card">
+                    <div class="card-title">01｜本地資產</div>
+                    <div class="card-desc">紅隊視角：盤點取得的客戶端元資料與更新資產，區分原始檔、推測和重建產物。<br>藍隊檢查：假設可分發內容會被分析；驗證更新完整性、版本相容與金鑰不隨客戶端發放。</div>
+                </div>
+                <div class="hub-card">
+                    <div class="card-title">02｜通訊契約</div>
+                    <div class="card-desc">紅隊視角：用離線型錄與隔離流量對照訊息形狀、通道、欄位與回應順序。<br>藍隊檢查：按通道及狀態驗證訊息；記錄受界限的解析錯誤、未知欄位和異常時序。</div>
+                </div>
+                <div class="hub-card">
+                    <div class="card-title">03｜隔離對照</div>
+                    <div class="card-desc">紅隊視角：以自建端點驗證登入至會話、角色狀態、世界初始化是否與客戶端相容。<br>藍隊檢查：每一步重驗身份、資源歸屬與一次性會話；畫面成功不等於後端授權成功。</div>
+                </div>
+                <div class="hub-card">
+                    <div class="card-title">04｜狀態與持久化</div>
+                    <div class="card-desc">紅隊視角：比對移動、配點等客戶端可見狀態與自建資料庫的權威結果。<br>藍隊檢查：對照速率／路徑／額度偏差，維持交易邊界、版本柵欄與可追溯的拒絕原因。</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 防禦案例索引 -->
+
+        <section>
+            <div class="section-header">
+                <h2 class="section-title">防禦案例與協定學習</h2>
+                <span class="section-desc">本地可閱讀：協定、移動與狀態契約；會話專篇仍在整理</span>
+            </div>
+
+            <div class="hub-grid">
+                <!-- 篇章 1: 協定逆向篇 (主入口) -->
+                <a href="PROTOBUF-ARCHITECTURE-AND-REVERSE-ENGINEERING-GUIDE.html" class="hub-card active-card">
+                    <div class="card-header-bar">
+                        <span class="card-icon">⚡</span>
+                        <span class="card-status status-live">可閱讀</span>
+                    </div>
+                    <div class="card-title">篇章 1：協定觀察與 Protobuf 防禦基礎</div>
+                    <div class="card-desc">
+                        從客戶端可見的欄位形狀還原嵌套訊息；藍隊以解析界限、會話狀態與資源歸屬阻止「格式合法」被誤當「操作授權」。
+                    </div>
+                    <div class="card-action">
+                        <span>閱讀本篇指引</span>
+                        <span>➔</span>
+                    </div>
+                </a>
+
+                <!-- 篇章 2: 連線狀態篇 -->
+                <div class="hub-card planned-card">
+                    <div class="card-header-bar">
+                        <span class="card-icon">🔌</span>
+                        <span class="card-status status-planned">連載籌備中</span>
+                    </div>
+                    <div class="card-title">篇章 2：會話狀態篇 ｜ 身份、心跳與查詢韌性</div>
+                    <div class="card-desc">
+                        待整理：多階段會話的狀態切換、心跳與未知欄位處理。這些是防禦設計問題，不是已完成的外部攻擊測試。
+                    </div>
+                    <div class="card-action" style="color: var(--text-muted);">
+                        <span>撰寫整理中...</span>
+                    </div>
+                </div>
+
+                <!-- 篇章 3: 空間移動篇 (本地可閱讀) -->
+                <a href="MOVEMENT-PACING-AND-PERSISTENCE.html" class="hub-card active-card">
+                    <div class="card-header-bar">
+                        <span class="card-icon">🏃</span>
+                        <span class="card-status status-live">可閱讀</span>
+                    </div>
+                    <div class="card-title">篇章 3：移動篇 ｜ 節奏差與權威位置</div>
+                    <div class="card-desc">
+                        用本地移動時序說明動畫與服務端狀態的偏差，以及防守方如何限制路徑、異常步頻與高頻持久化；搖桿優化另標示未驗證部分。
+                    </div>
+                    <div class="card-action">
+                        <span>閱讀本篇指引</span>
+                        <span>➔</span>
+                    </div>
+                </a>
+
+                <!-- 篇章 4: 數值與玩法篇 (本地可閱讀) -->
+                <a href="STAT-ALLOCATION-AND-BONUS-CONTRACT.html" class="hub-card active-card">
+                    <div class="card-header-bar">
+                        <span class="card-icon">⚔️</span>
+                        <span class="card-status status-live">可閱讀</span>
+                    </div>
+                    <div class="card-title">篇章 4：數值篇 ｜ 客戶端顯示與服務端權威</div>
+                    <div class="card-desc">
+                        以自建環境中的配點錯誤說明：即使介面計算合理，服務端仍須獨立驗證點數池、角色歸屬與交易結果，不能信任客戶端畫面。
+                    </div>
+                    <div class="card-action">
+                        <span>閱讀本篇指引</span>
+                        <span>➔</span>
+                    </div>
+                </a>
+            </div>
+        </section>
+
+        <!-- 頁尾 -->
+        <footer>
+            <p><strong>LM-Project</strong> ｜ 專案發起人：<strong>Enos</strong></p>
+            <p style="margin: 10px 0;">
+                <a href="https://github.com/enoslo19901130/LM-Project-Guidelines" target="_blank" rel="noopener noreferrer" class="footer-github-link">
+                    <svg class="github-icon" height="16" width="16" viewBox="0 0 16 16">
+                        <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
+                    </svg>
+                    <span>GitHub 專案倉庫：https://github.com/enoslo19901130/LM-Project-Guidelines</span>
+                </a>
+            </p>
+            <p>LM-Project Independent Lab ｜ Blue-Team Reference</p>
+        </footer>
+    </div>
+</body>
+</html>

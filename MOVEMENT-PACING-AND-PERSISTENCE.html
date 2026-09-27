@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>篇章 3：空間移動篇 ｜ 節奏對齊、純記憶體走動與路徑接續 (LM-Project)</title>
+    <style>
+        :root {
+            --bg-primary: #0a0f1d; --bg-card: #1a243b; --bg-card-hover: #22304e; --bg-code: #070b14;
+            --border-color: #2a3756; --text-primary: #f8fafc; --text-secondary: #94a3b8; --text-muted: #64748b;
+            --accent-blue: #38bdf8; --accent-cyan: #22d3ee; --accent-green: #34d399;
+            --accent-amber: #fbbf24; --accent-rose: #f87171; --accent-purple: #c084fc;
+            --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: var(--font-sans); background-color: var(--bg-primary); color: var(--text-primary);
+               line-height: 1.75; display: flex; justify-content: center; }
+        .container { max-width: 1180px; width: 100%; padding: 56px 24px; display: flex; flex-direction: column; }
+        .top-navbar { display: flex; align-items: center; justify-content: space-between;
+                      padding-bottom: 24px; border-bottom: 1px solid var(--border-color); margin-bottom: 40px; }
+        .brand-logo { display: flex; align-items: center; gap: 12px; font-size: 1.25rem; font-weight: 800; color: #fff; text-decoration: none; }
+        .brand-badge { font-size: 0.72rem; font-weight: 700; padding: 3px 10px; border-radius: 9999px;
+                       background: rgba(192,132,252,0.15); color: var(--accent-purple); border: 1px solid rgba(192,132,252,0.35); }
+        .back-link { color: var(--text-secondary); text-decoration: none; font-size: 0.9rem; font-weight: 600; }
+        .back-link:hover { color: var(--accent-cyan); }
+        h1 { font-size: 2.3rem; font-weight: 800; line-height: 1.3; margin-bottom: 14px;
+             background: linear-gradient(135deg, #ffffff 15%, #93c5fd 60%, var(--accent-blue) 100%);
+             -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .lead { color: var(--text-secondary); font-size: 1.05rem; max-width: 900px; margin-bottom: 36px; }
+        .badge-group { display: inline-flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+        .badge { font-size: 0.72rem; font-weight: 700; padding: 4px 12px; border-radius: 9999px; letter-spacing: 0.04em; }
+        .badge-purple { background: rgba(192,132,252,0.12); color: var(--accent-purple); border: 1px solid rgba(192,132,252,0.3); }
+        .badge-cyan { background: rgba(34,211,238,0.12); color: var(--accent-cyan); border: 1px solid rgba(34,211,238,0.3); }
+        .badge-amber { background: rgba(251,191,36,0.12); color: var(--accent-amber); border: 1px solid rgba(251,191,36,0.3); }
+        .badge-green { background: rgba(52,211,153,0.12); color: var(--accent-green); border: 1px solid rgba(52,211,153,0.3); }
+        h2 { font-size: 1.5rem; font-weight: 700; margin: 48px 0 18px; color: #fff; }
+        h3 { font-size: 1.12rem; font-weight: 700; margin: 28px 0 12px; color: var(--accent-cyan); }
+        p { color: #cbd5e1; margin-bottom: 14px; }
+        ul, ol { color: #cbd5e1; margin: 0 0 16px 22px; }
+        li { margin-bottom: 8px; }
+        code { font-family: var(--font-mono); font-size: 0.88em; background: var(--bg-code); color: var(--accent-amber);
+               padding: 2px 6px; border-radius: 5px; border: 1px solid var(--border-color); }
+        pre { background: var(--bg-code); border: 1px solid var(--border-color); border-radius: 10px;
+              padding: 18px 20px; overflow-x: auto; margin-bottom: 18px; }
+        pre code { background: none; border: none; color: #e2e8f0; padding: 0; font-size: 0.86rem; line-height: 1.7; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 0.92rem; }
+        th, td { border: 1px solid var(--border-color); padding: 10px 12px; text-align: left; vertical-align: top; }
+        th { background: var(--bg-card); color: #fff; font-weight: 700; }
+        td { color: #cbd5e1; }
+        .callout { border-left: 5px solid var(--accent-amber); background: rgba(251,191,36,0.08);
+                   padding: 20px 24px; border-radius: 0 12px 12px 0; margin-bottom: 28px; }
+        .callout-title { font-weight: 700; color: var(--accent-amber); margin-bottom: 6px; }
+        .callout.ok { border-left-color: var(--accent-green); background: rgba(52,211,153,0.08); }
+        .callout.ok .callout-title { color: var(--accent-green); }
+        .callout.bad { border-left-color: var(--accent-rose); background: rgba(248,113,113,0.08); }
+        .callout.bad .callout-title { color: var(--accent-rose); }
+        footer { margin-top: 56px; padding-top: 28px; border-top: 1px solid var(--border-color);
+                 text-align: center; font-size: 0.88rem; color: var(--text-muted); }
+        .mobile-scroll-note { display: none; }
+        @media (max-width: 768px) {
+            .container { min-width: 0; padding: 28px 16px; overflow-wrap: anywhere; }
+            .top-navbar { flex-wrap: wrap; gap: 12px; margin-bottom: 24px; }
+            .brand-logo { flex-wrap: wrap; }
+            .back-link { display: inline-flex; align-items: center; min-height: 44px; }
+            h1 { font-size: 1.8rem; }
+            .callout { padding: 16px; }
+            table { font-size: 0.94rem; display: block; max-width: 100%; overflow-x: auto; }
+            th, td { min-width: 180px; }
+            .mobile-scroll-note { display: block; color: var(--text-muted); font-size: 0.94rem; margin-bottom: 12px; }
+            pre code { font-size: 0.94rem; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <nav class="top-navbar">
+        <a href="index.html" class="brand-logo"><span>🛡️ LM-Project</span><span class="brand-badge">篇章 3</span></a>
+        <a href="index.html" class="back-link">← 返回門戶首頁</a>
+    </nav>
+
+    <div class="badge-group">
+        <span class="badge badge-green">本地可閱讀</span>
+        <span class="badge badge-cyan">LM-Project 實驗室</span>
+        <span class="badge badge-purple">Opcode 150 / 106 / 159</span>
+        <span class="badge badge-amber">自有測試環境驗收：暴衝根除</span>
+    </div>
+    <h1>篇章 3：空間移動篇 ｜ 節奏對齊、純記憶體走動與路徑接續</h1>
+    <p class="lead">
+        移動是「伺服器權威」與「客戶端預測」貼得最緊的一塊：步頻差 190 毫秒，長距離就會在尾段暴衝；
+        每一步都寫一次資料庫，會放大自建儲存的交易與鎖等待壓力；而「走動中再點」的起點只要差一格，
+        整條路徑就會被判撞牆。本篇以 LM-Project 自有測試環境的量測為例，記錄這三件事的成因、修正與驗證方式。
+    </p>
+
+    <div class="callout">
+        <div class="callout-title">⚠️ 適用前提與實驗邊界</div>
+        <p>
+            本頁是 LM-Project <b>自建實驗室</b>的工程案例研究：觀察對象是<b>受控的本地客戶端副本</b>與<b>自建隔離的測試服務端</b>。
+            <b>未對第三方後端資料庫進行入侵或直接操作</b>；文中資料庫寫入均指自建測試儲存。既有唯讀流量對照也不構成第三方後端安全驗證。
+            數值與時序來自該受控副本的實測與靜態分析，換版本請重新驗證；所有改動都不動 wire 格式。
+        </p>
+        <p>
+            全文以三種標記區分證據強度：<b>【本地觀測】</b>＝自有環境量測到的事實；<b>【推論】</b>＝由觀測推導、尚未直接驗證；
+            <b>【未驗證】</b>＝已實作或已提出但<b>尚未證明有效</b>的做法。加速道具一律以「加速等級」表述，不綁定特定道具名稱。
+        </p>
+    </div>
+    <p class="mobile-scroll-note">手機閱讀：寬表格與程式碼可在各自區塊內左右滑動。</p>
+
+    <h2>一、症狀與成因對照</h2>
+    <table>
+        <tr><th>症狀</th><th>根因</th><th>修正</th></tr>
+        <tr>
+            <td>長距離移動，尾段突然加速／瞬移（暴衝）</td>
+            <td>伺服器步頻寫死 <code>260ms</code>（＝二段加速等級的值），而客戶端基礎態行走動畫約 <code>440–460ms/格</code>；15 格時伺服器 3.9 秒走完並送出終止幀，客戶端只走了 8.6 格，內插器被迫在數幀內補完剩下 6 格</td>
+            <td>基礎步頻改為 <code>450ms</code>（單一來源 <code>TransformationService.BASE_WALK_TICK_MILLIS</code>）；狀態加速仍走既有變身／消耗品分級</td>
+        </tr>
+        <tr>
+            <td>移動中每一步都對測試儲存做一次帶鎖交易</td>
+            <td><code>hasPositionWriteBacklogLocked()</code> 把「步進索引落後」也算成積壓，於是走動期間持續派發寫入工作（雖有單飛合併，仍是每步一次交易節奏）</td>
+            <td>積壓只在「已停下且記憶體座標 ≠ 持久化座標」時成立；走動純記憶體，抵達終點才落地一次</td>
+        </tr>
+        <tr>
+            <td>走動中再點新目標 → 偶爾「點了不走」</td>
+            <td>新路徑以 <code>currentX/Y</code> 為起點，但客戶端是從「正在前往的那一格」開始送方向；相位差一格使路徑擦到牆，被地形驗證擋整條</td>
+            <td>步進進行中時，新路徑以<b>進行中步進的目標格</b>為起點；並保留該步作為新路徑第一步（否則移動幀會跳格）</td>
+        </tr>
+        <tr>
+            <td>虛擬搖桿推住時「一格一格」頓挫</td>
+            <td>每段短路徑結尾都補發移動終止幀 <code>159</code>，客戶端動畫在 Walk 與 Idle 之間反覆切換</td>
+            <td>連續輸入期間<b>不發 159</b>，只連續推 <code>106</code>；僅在放開或 <code>walkTick×1.5</code> 無新輸入時補送終止。<b>【未驗證】實機體感未改善，見第六節</b></td>
+        </tr>
+    </table>
+
+    <h2>二、客戶端節奏：為什麼 260ms 一定暴衝</h2>
+    <p>
+        步頻並非固定值，而是依玩家移速狀態切換；而基礎態的步頻，就是客戶端動畫本身的長度
+        <b>【本地觀測】</b>：動畫週期取自受控本地副本的資源量測，步頻分級取自本專案服務端既有的分級表。
+    </p>
+    <table>
+        <tr><th>狀態（通用分級）</th><th>步頻</th><th>說明</th></tr>
+        <tr><td>基礎態（無加速）</td><td><code>~450ms</code></td><td>等於客戶端骨骼行走週期（受控副本實測 440–460ms）</td></tr>
+        <tr><td>加速等級一</td><td><code>330–360ms</code></td><td>+25%～33%</td></tr>
+        <tr><td>加速等級二</td><td><code>260–285ms</code></td><td>+50%～66%</td></tr>
+        <tr><td>加速等級三</td><td><code>210–230ms</code></td><td>+75%～100%</td></tr>
+    </table>
+    <div class="callout bad">
+        <div class="callout-title">本專案的錯誤原始設定</div>
+        <p>基礎態基準被設成 <code>260ms</code>（＝加速等級二的值）。協定結構全對，但「時間維度」超速 ——
+        客戶端的補償邏輯不會回頭修正歷史，只能在尾段一次性快轉，這就是肉眼看到的暴衝。</p>
+    </div>
+    <div class="callout ok">
+        <div class="callout-title">✔ 驗收結果</div>
+        <p>改為 450ms 後，操作者實測：<b>「移動比以前順暢些且沒有暴衝的情況」</b>。伺服器啟動日誌同時自報
+        <code>walk_tick_ms=450</code>，可作為部署後的第一道確認。</p>
+    </div>
+
+    <h2>三、走動＝純記憶體：只在終點落地一次</h2>
+    <p>原本的設計意圖是「位置持久化要有界」，但實作成「每一步都算積壓」，於是走動期間不斷派發寫入工作。修正後：</p>
+    <ul>
+        <li><b>走動期間</b>：座標只存在 JVM（<code>currentX/Y/Heading</code>），與持久層的 <code>durable*</code> 不同步也不視為積壓。</li>
+        <li><b>抵達終點</b>：<code>reconcilePending</code> 觸發<b>一次</b>非同步落地。</li>
+        <li><b>傳送／登出／斷線</b>：各自保留最終寫入；<code>disconnect()</code> 會等候既有寫入並在界線內補最後一次。</li>
+        <li><b>積壓時鐘只在停下後起算</b>，因此 15 格 6.75 秒的正常移動不可能誤觸 3 秒 fail-closed。</li>
+        <li><b>租約 CAS／fence 驗證完全不動</b>：防回檔靠的是版本比對，不是「每步寫庫」。</li>
+    </ul>
+    <p>
+        反面取捨：行程若在移動中崩潰，會退回「上一次停下時的座標」。這是刻意選擇 ——
+        以每步一次交易換取更小的回檔風險，在高併發下完全不划算。
+    </p>
+
+    <h2>四、路徑接續（Splice）：相位差一格就會「點了不走」</h2>
+    <pre><code># 錯誤：以目前座標為新路徑起點
+plan = buildMovePlan(directions, currentX, currentY)
+#      → 客戶端實際是從「正在前往的那一格」開始送方向 → 起點落後一格 → 擦牆 → 整條被拒
+
+# 正確：進行中步進的目標格為新起點，且保留該步為新路徑第一步
+start = inStepMotion ? currentStep.to : (currentX, currentY)
+plan  = [currentStep] + buildMovePlan(directions, start)
+#      → 106 序列仍連續（from 座標＋朝向不變），座標只按已執行步數推進</code></pre>
+    <div class="callout">
+        <div class="callout-title">為什麼要「保留那一步」</div>
+        <p>若直接以進行中步進的目標當新起點，該步就被丟棄，第一個 <code>106</code> 的 <code>to</code> 會與前一幀差 <b>2 格</b>
+        （而非 1 格）—— 本地觀測即記錄到此類兩格跳躍。保留它再把重算的步數接在後面，wire 才連續。</p>
+    </div>
+
+    <h2>五、方法論：這一輪為什麼能收斂</h2>
+    <ol>
+        <li><b>每步日誌</b>：<code>world_move_step</code>、<code>world_move_timing</code>、<code>outbound_frame opcode=106/159</code> 讓「哪一格、幾毫秒、何時送出」全部可還原。</li>
+        <li><b>唯讀診斷先上線</b>：地形拒絕的理由不足以分辨「半格牆」與「對角擠過」，因此先印出確切格子、方向與原始旗標，再改規則。</li>
+        <li><b>靜態分析定調</b>：客戶端動畫週期、<code>159</code> 的時機、配點欄位語意，都以受控本地副本的二進位分析推出，伺服器端才不用猜。</li>
+        <li><b>完整測試套件把關</b>：本輪多次出現「局部自測全綠、全套爆掉」，都是舊契約殘留；原則是<b>刪掉錯誤契約</b>而不是重新釘死。</li>
+    </ol>
+
+    <h2>六、未結【未驗證】：虛擬搖桿的「一格一格」</h2>
+    <p>
+        已依設計實作「連續輸入期間不送 159、放開或逾時才補」，但<b>實機體感未改善</b>，
+        因此這個最佳化<b>目前不能宣稱有效</b>。日誌同時顯示兩件<b>【本地觀測】</b>的事實：客戶端
+        <b>完全沒有送 166／167</b>，而 pad 每 tick 送來的是「<code>cancel</code> ＋ 3–5 格短路徑」
+        （<code>is_auto=0 link=0</code>），我們原本的串流判斷因此從未成立。
+        <b>【推論】</b>「不送終止幀即可消除頓挫」這條假設，目前證據不足。
+    </p>
+    <div class="callout">
+        <div class="callout-title">下一步（量測中）</div>
+        <p>
+            已加唯讀診斷：每個入站 opcode、<code>150</code> 的旗標（<code>is_auto/is_link/is_virtualpad</code>）、
+            方向數與原始位元組。待證據確認「這個客戶端的搖桿到底用什麼特徵表達」，
+            再決定判準（例如：佇列非空就延伸，而非依賴 pad 旗標），不先猜。
+        </p>
+    </div>
+
+    <h2>七、紅隊觀察 → 藍隊驗證與遙測</h2>
+    <p>
+        本節把前述自有環境的觀察翻譯成防守假說。左欄的重播、超速及高頻請求是<b>可在授權實驗室設計的對抗檢查</b>，
+        不是本文聲稱已對外部系統執行的攻擊；右欄是建議驗證的不變量與遙測，<b>不代表所有監測指標已實裝</b>。
+    </p>
+    <table>
+        <tr><th>紅側：重建端可觀察／可推論的行為</th><th>藍側：驗證、不變量與遙測</th></tr>
+        <tr>
+            <td><b>合成節奏</b>：以偏快或偏慢的固定步頻回送路徑幀，量測客戶端在尾段是否出現補插（暴衝）、是否只是「看起來順」</td>
+            <td><b>位置由伺服器擁有</b>：步頻只能來自單一來源常數，並對齊客戶端動畫週期、設上下界；啟動時自報 <code>walk_tick_ms</code> 作為部署後的第一道比對。遙測：步頻設定變更事件、每幀間隔分布 P95／P99</td>
+        </tr>
+        <tr>
+            <td><b>路徑重播</b>：以縮短步數或短路徑片段重播同一路線，觀察是否出現跳格、越界或「已送達卻不動」</td>
+            <td><b>起點推導與保留</b>：新路徑必須以進行中步進的目標格為起點並保留該步；<b>幾何邊界與每步位移上界由伺服器驗證</b>，越界步拒絕整條路徑而非部分接受。遙測：路徑合法性拒絕率、跳格偵測數</td>
+        </tr>
+        <tr>
+            <td><b>位置寫入洪水</b>：以高頻位置更新轟擊持久層，觀察交易量與鎖等待是否上升</td>
+            <td><b>有界合併</b>：走動期間純記憶體，僅在停下／傳送／登出落地；持久化有界且單飛合併。遙測：寫入佇列深度、合併率（送出幀數 ÷ 落地交易數）、落地延遲 P99</td>
+        </tr>
+        <tr>
+            <td><b>過期狀態回放</b>：重播舊 epoch／舊版本的更新，觀察是否覆蓋較新的位置</td>
+            <td><b>epoch／fencing</b>：每次落地攜帶版本或 epoch，落庫以 compare-and-swap 驗證；<b>舊 epoch 一律拒絕</b>並回應目前權威狀態。遙測：stale-epoch 拒絕率、CAS 失敗數</td>
+        </tr>
+        <tr>
+            <td><b>速率與路徑差異</b>：送出超越合理上限的位移，或穿越地形的路徑，觀察是否被接受</td>
+            <td><b>速率上界與合法性</b>：每 tick 位移上限、瞬時速率分布、與狀態分級一致性；不符即 fail-closed。遙測：超速拒絕數、路徑穿越拒絕率</td>
+        </tr>
+        <tr>
+            <td><b>重試風暴</b>：對同一目標重複請求，觀察是否被合併或造成重複落地</td>
+            <td><b>冪等與去重</b>：同一目標的重複請求合併或忽略，單位時間請求數設限。遙測：重試次數、重試間隔分布、同一目標重複請求比例</td>
+        </tr>
+    </table>
+    <div class="callout">
+        <div class="callout-title">一句話總結</div>
+        <p>
+            客戶端<b>畫面正確不等於伺服端授權通過</b>：動畫順暢、面板對齊、路徑看起來合理，
+            全部都只是顯示層現象。真正的判定永遠在伺服器：位置歸伺服器擁有、落地有 epoch 與 fence、
+            越界與超速一律拒絕，而<b>每一次拒絕本身就是最好的遙測訊號</b>。
+        </p>
+    </div>
+
+    <footer>
+        <p><strong>LM-Project</strong> ｜ 篇章 3：空間移動篇</p>
+        <p>本頁的持久化案例只涉及自建測試儲存；沒有對第三方後端資料庫的入侵結果。</p>
+    </footer>
+</div>
+</body>
+</html>

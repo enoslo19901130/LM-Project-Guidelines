@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>篇章 4：數值與玩法篇 ｜ 配點、加成能力與 Type-12 契約 (LM-Project)</title>
+    <style>
+        :root {
+            --bg-primary: #0a0f1d;
+            --bg-card: #1a243b;
+            --bg-card-hover: #22304e;
+            --bg-code: #070b14;
+            --border-color: #2a3756;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --accent-blue: #38bdf8;
+            --accent-cyan: #22d3ee;
+            --accent-green: #34d399;
+            --accent-amber: #fbbf24;
+            --accent-rose: #f87171;
+            --accent-purple: #c084fc;
+            --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: var(--font-sans);
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.75;
+            display: flex;
+            justify-content: center;
+        }
+        .container { max-width: 1180px; width: 100%; padding: 56px 24px; display: flex; flex-direction: column; }
+        .top-navbar {
+            display: flex; align-items: center; justify-content: space-between;
+            padding-bottom: 24px; border-bottom: 1px solid var(--border-color); margin-bottom: 40px;
+        }
+        .brand-logo { display: flex; align-items: center; gap: 12px; font-size: 1.25rem; font-weight: 800; color: #fff; text-decoration: none; }
+        .brand-badge {
+            font-size: 0.72rem; font-weight: 700; padding: 3px 10px; border-radius: 9999px;
+            background: rgba(192, 132, 252, 0.15); color: var(--accent-purple); border: 1px solid rgba(192, 132, 252, 0.35);
+        }
+        .back-link { color: var(--text-secondary); text-decoration: none; font-size: 0.9rem; font-weight: 600; }
+        .back-link:hover { color: var(--accent-cyan); }
+        h1 { font-size: 2.3rem; font-weight: 800; line-height: 1.3; margin-bottom: 14px;
+             background: linear-gradient(135deg, #ffffff 15%, #93c5fd 60%, var(--accent-blue) 100%);
+             -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .lead { color: var(--text-secondary); font-size: 1.05rem; max-width: 900px; margin-bottom: 36px; }
+        .badge-group { display: inline-flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+        .badge { font-size: 0.72rem; font-weight: 700; padding: 4px 12px; border-radius: 9999px; letter-spacing: 0.04em; }
+        .badge-purple { background: rgba(192,132,252,0.12); color: var(--accent-purple); border: 1px solid rgba(192,132,252,0.3); }
+        .badge-cyan { background: rgba(34,211,238,0.12); color: var(--accent-cyan); border: 1px solid rgba(34,211,238,0.3); }
+        .badge-amber { background: rgba(251,191,36,0.12); color: var(--accent-amber); border: 1px solid rgba(251,191,36,0.3); }
+        .badge-green { background: rgba(52,211,153,0.12); color: var(--accent-green); border: 1px solid rgba(52,211,153,0.3); }
+        h2 { font-size: 1.5rem; font-weight: 700; margin: 48px 0 18px; color: #fff; }
+        h3 { font-size: 1.12rem; font-weight: 700; margin: 28px 0 12px; color: var(--accent-cyan); }
+        p { color: #cbd5e1; margin-bottom: 14px; }
+        ul, ol { color: #cbd5e1; margin: 0 0 16px 22px; }
+        li { margin-bottom: 8px; }
+        code { font-family: var(--font-mono); font-size: 0.88em; background: var(--bg-code); color: var(--accent-amber);
+               padding: 2px 6px; border-radius: 5px; border: 1px solid var(--border-color); }
+        pre { background: var(--bg-code); border: 1px solid var(--border-color); border-radius: 10px;
+              padding: 18px 20px; overflow-x: auto; margin-bottom: 18px; }
+        pre code { background: none; border: none; color: #e2e8f0; padding: 0; font-size: 0.86rem; line-height: 1.7; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 0.92rem; }
+        th, td { border: 1px solid var(--border-color); padding: 10px 12px; text-align: left; vertical-align: top; }
+        th { background: var(--bg-card); color: #fff; font-weight: 700; }
+        td { color: #cbd5e1; }
+        .callout { border-left: 5px solid var(--accent-amber); background: rgba(251,191,36,0.08);
+                   padding: 20px 24px; border-radius: 0 12px 12px 0; margin-bottom: 28px; }
+        .callout-title { font-weight: 700; color: var(--accent-amber); margin-bottom: 6px; }
+        .callout.ok { border-left-color: var(--accent-green); background: rgba(52,211,153,0.08); }
+        .callout.ok .callout-title { color: var(--accent-green); }
+        .callout.bad { border-left-color: var(--accent-rose); background: rgba(248,113,113,0.08); }
+        .callout.bad .callout-title { color: var(--accent-rose); }
+        .card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 14px; padding: 24px; margin-bottom: 20px; }
+        footer { margin-top: 56px; padding-top: 28px; border-top: 1px solid var(--border-color);
+                 text-align: center; font-size: 0.88rem; color: var(--text-muted); }
+        .mobile-scroll-note { display: none; }
+        @media (max-width: 768px) {
+            .container { min-width: 0; padding: 28px 16px; overflow-wrap: anywhere; }
+            .top-navbar { flex-wrap: wrap; gap: 12px; margin-bottom: 24px; }
+            .brand-logo { flex-wrap: wrap; }
+            .back-link { display: inline-flex; align-items: center; min-height: 44px; }
+            h1 { font-size: 1.8rem; }
+            .callout { padding: 16px; }
+            table { font-size: 0.94rem; display: block; max-width: 100%; overflow-x: auto; }
+            th, td { min-width: 180px; }
+            .mobile-scroll-note { display: block; color: var(--text-muted); font-size: 0.94rem; margin-bottom: 12px; }
+            pre code { font-size: 0.94rem; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <nav class="top-navbar">
+        <a href="index.html" class="brand-logo"><span>🛡️ LM-Project</span><span class="brand-badge">篇章 4</span></a>
+        <a href="index.html" class="back-link">← 返回門戶首頁</a>
+    </nav>
+
+    <div class="badge-group">
+        <span class="badge badge-green">本地可閱讀</span>
+        <span class="badge badge-cyan">LM-Project 實驗室</span>
+        <span class="badge badge-purple">Opcode 10 / 12 / 14 / 15 / 920</span>
+        <span class="badge badge-amber">自有測試環境驗收通過</span>
+    </div>
+    <h1>篇章 4：數值與玩法篇 ｜ 配點、加成能力與 Type-12 契約</h1>
+    <p class="lead">
+        配點不是「伺服器算好送給客戶端」而已。LM 實驗室受控客戶端副本的能力面板<b>由客戶端自行推導</b>——
+        它用自己的職業基礎表、自己從 <code>Type-12</code> 算已配點、自己決定按鈕何時亮。
+        本篇記錄四個訊息（<code>10 / 12 / 14 / 15</code>）的<b>精確欄位契約</b>，
+        以及一個「伺服器每個回應都合法、畫面卻顯示 −30」的實例如何被逐步拆解。
+    </p>
+
+    <div class="callout">
+        <div class="callout-title">⚠️ 適用前提與實驗邊界</div>
+        <p>
+            本文假設讀者已具備<b>受控本地客戶端副本</b>的 ARM64 靜態分析環境（Unpacked ELF）與<b>自有測試服務端</b>。
+            <b>未對第三方後端資料庫進行入侵或直接操作</b>；文中提到的資料庫，均為自建測試儲存，
+            案例中的等級、點數與六維數值為實驗室測試角色的量測值。
+            欄位語意與公式僅適用於本專案所分析的客戶端版本，<b>不得直接套用到其他版本</b>。
+        </p>
+        <p>
+            證據標記：<b>【本地觀測】</b>＝自有環境量測到的事實；<b>【推論】</b>＝由觀測推導、尚未直接驗證；
+            <b>【未驗證】</b>＝尚無證據支持的假設。職業一律以「職業基礎值」表述，累積型道具以「累積幣」表述，不綁定特定道具或職業名稱。
+        </p>
+    </div>
+    <p class="mobile-scroll-note">手機閱讀：寬表格與程式碼可在各自區塊內左右滑動。</p>
+
+    <h2>一、先講結論：四個訊息的欄位契約</h2>
+    <table>
+        <tr><th>訊息</th><th>方向</th><th>欄位</th><th>正確語意</th></tr>
+        <tr>
+            <td><code>10 STAT_SIMULATE</code></td><td>C2S</td>
+            <td><code>field 2</code>（proposed）<br><code>field 1</code>（current_base）</td>
+            <td><b>絕對目標總值</b>（＝客戶端當下模擬出的六維總值，<b>含已配點</b>）；field 1 客戶端<b>不送</b>（null）。</td>
+        </tr>
+        <tr>
+            <td><code>10 STAT_SIMULATE</code></td><td>S2C</td>
+            <td><code>field 1</code>（stat）<br><code>field 2</code> keys 41–46<br><code>field 2</code> keys 17/18/21<br>keys 1/2/8/9</td>
+            <td>面板文字＝<b>模擬後總值</b>；<br>keys 41–46＝<code>classBase + pending</code>，其中 <code>pending = max(0, proposed − 我方已配點總值)</code>；<br>17/18/21＝裝備 HP/MP/AC 加成；<br>1/2/8/9＝0。</td>
+        </tr>
+        <tr>
+            <td><code>12 STAT_NOTI</code></td><td>S2C</td>
+            <td><code>field 1</code>（stat）<br><code>field 5</code>（base）<br><code>field 3</code>（health）</td>
+            <td><code>field 1</code>＝總值（含裝備加成）；<br><b><code>field 5</code>＝已配點基礎總值（職業基礎＋已配點），絕不可送職業基礎值</b>；<br><code>field 3</code>＝生命值。</td>
+        </tr>
+        <tr>
+            <td><code>14 STAT_CHANGE_END</code></td><td>C2S</td>
+            <td><code>field 1</code>（stat）</td>
+            <td><b>絕對目標總值</b>（與 <code>10</code> field 2 <b>完全同語意</b>，兩者在客戶端是同一個記憶體來源）。</td>
+        </tr>
+        <tr>
+            <td><code>14</code>（ACK）＋<code>12</code>＋<code>15</code></td><td>S2C</td>
+            <td>幀序</td>
+            <td><b>必須 <code>12 → 14 → 15</code></b>。客戶端在收到 <code>14</code> 成功時會立刻取樣現值當基準並自動送出一幀 <code>10</code>；若 <code>12</code> 尚未抵達，基準會鎖在舊值而導致計數錯亂。</td>
+        </tr>
+        <tr>
+            <td><code>15 STAT_BONUSSTAT_ACK</code></td><td>S2C</td>
+            <td><code>field 1</code>（count）<br><code>field 2</code><br><code>field 8</code><br><code>field 10</code></td>
+            <td><b><code>field 1</code>＝總點數池（spent ＋ remaining），不是剩餘點數</b>；<br><code>field 2</code>＝已配置點數（spent）；<br><code>field 8</code>＝單項加點上限（本專案設定 50，客戶端會以此檢驗）；<br><code>field 10</code>＝純等級獲得池。</td>
+        </tr>
+    </table>
+
+    <h2>二、客戶端自己算了什麼（這才是重點）</h2>
+    <h3>1. 「加成能力」文字 ＝ <code>15.field1 − Σ(CharacterInfo.m_totalStat − classBase)</code></h3>
+    <p>
+        客戶端不信任伺服器送來的「剩餘點數」。它以 <code>Opcode 15</code> 的 <code>field 1</code>（總池）為被減數，
+        減去<b>它自己由 Type-12 推導出的已配點總和</b>（六維總值 − 客戶端內建職業基礎表）。
+        因此同一個畫面值，可能由完全不同的（我方欄位, 客戶端狀態）組合產生——<b>這就是本案最大的陷阱</b>。
+        <b>【本地觀測】</b>面板數值完全由客戶端這條算式決定，伺服器無法從畫面反推它算對了沒有。
+    </p>
+    <h3>2. 面板重畫的觸發條件 ＝ Type-12 的「新舊 base 不相等」</h3>
+    <p>
+        <code>CharacterInfo::OnStatNoti</code> 會比較新舊 <code>BaseStat</code>，只有<b>不相等</b>時才派發
+        <code>Event 0x71c</code> 觸發六維文字重繪。若 <code>field 5</code> 永遠送職業基礎值（例如某職業 STR 基礎值 16），
+        伺服器就算送出正確的總值，畫面也<b>不會更新</b>。
+    </p>
+    <h3>3. 「決定能力」按鈕 ＝ 剩餘恰為 0 才亮</h3>
+    <p>
+        客戶端原生硬編：<code>剩餘點數 == 0</code> 才啟用按鈕（大於 0 或小於 0 一律置灰）。
+        常見體感「+1 就能按」是因為每級只給 1 點；若測試角色一次拿到多點，就必須點完才會亮。
+    </p>
+    <h3>4. 降配點是不可能的操作</h3>
+    <p>
+        減號按鈕閘門要求 <code>currentStat &gt; baselineStat</code> 才啟用，
+        因此客戶端不可能產生「低於目前總值」的提案。若收到此類封包（異常封包或非預期的重放），
+        伺服器應以 <code>Result = 6 (Fail_LowStatCount)</code> 拒絕，並在 <code>10</code> 回應中把 keys 夾止在職業基礎值。
+    </p>
+
+    <h2>三、實例拆解：−30 的誕生與終結</h2>
+    <p>
+        症狀：測試角色等級 82（點數池 32、已配 31），面板顯示 <b>加成能力 −30</b>，
+        且<b>完全重啟 App 後仍重現</b>（代表不是客戶端殘留）。
+    </p>
+    <table>
+        <tr><th>階段</th><th>進世界 Type-12</th><th>客戶端自算已配</th><th>我方 <code>15.field1</code></th><th>畫面</th></tr>
+        <tr><td>修正前（舊版）</td><td>16（捕獲模板值）</td><td><code>(16−16)+(16−16)=0</code></td><td>0（誤當 remaining）</td><td><b>0</b>　← 假象吻合</td></tr>
+        <tr><td>修正 Type-12 後</td><td>21 / 42（本角色真值）</td><td><code>(21−16)+(42−16)=31</code></td><td>1（仍誤當 remaining）</td><td><b>−30</b>　← 真因暴露</td></tr>
+        <tr><td>修正 <code>15.field1</code> 後</td><td>21 / 42</td><td>31</td><td>32（總池）</td><td><b>+1</b>　← 正確</td></tr>
+    </table>
+    <div class="callout bad">
+        <div class="callout-title">最大的教訓：舊版「看起來正確」是巧合</div>
+        <p>
+            舊版之所以顯示 0，是因為進世界的 Type-12 送了固定的捕獲模板值 16，
+            讓客戶端算出的已配點剛好為 0，於是 <code>0 − 0 = 0</code>。
+            當我們把 Type-12 修成正確的本角色值（21/42）後，客戶端終於算出真實的已配 31，
+            隱藏已久的 <code>15.field1</code> 語意錯誤才被暴露出來。
+            <b>「改了 A 之後 B 才壞」往往不是 A 的錯，而是 B 一直是錯的、只是以前被掩蓋。</b>
+        </p>
+    </div>
+
+    <h2>四、進入世界的第一幀，決定一切</h2>
+    <p>
+        客戶端的 <code>ElixirSimulator</code> 並不是常駐監聽網路，它在使用者<b>開啟能力面板</b>時
+        才向 <code>CharacterInfo</code> 取樣，而 <code>CharacterInfo</code> 的六維來自<b>進入世界時的 Type-12</b>。
+        若該幀仍使用捕獲模板的舊值（例如其他角色的 16/11/16），模擬器的基準線就會被鎖在錯誤值上，
+        之後所有配點計算全部偏移。
+    </p>
+    <div class="callout ok">
+        <div class="callout-title">✔ 正確實作</div>
+        <p>
+            進入世界的 Type-12 必須以<b>本角色</b>的已配點總值改寫 <code>field 1</code> 與 <code>field 5</code>
+            （我方由准入階段讀取角色配點後帶入），生命值欄位照舊、其餘幀與順序不動。
+            驗收斷言：非零配點角色必須等於「21/11/42/7/8/8」且<b>明確不等於職業基礎值</b>。
+        </p>
+    </div>
+
+    <h2>五、累積幣欄位（Type-920）的零狀態</h2>
+    <p>
+        當前服務端沒有任何累積幣的產出機制，因此協議上必須維持<b>零值</b>：
+        <code>current = 0</code>、<code>cumulative = 0</code>、<code>level = 0</code>，
+        僅保留 <code>_max</code> 層（1200000 / 200，該副本的常數）。幣數換算為 <code>ceil(current / 6000)</code>；
+        級距由 <code>level</code> 驅動（0 灰、1 橙、2 綠、3 金、4 最高階外觀）。
+        <b>不要用經驗值推導累積幣</b>——那會讓尚未實作的機制長出假數值。
+    </p>
+
+    <h2>六、方法論：這次為什麼能一次修對</h2>
+    <ol>
+        <li><b>先量測，不改線。</b>我們在中間版本加了「唯讀診斷」：把客戶端送來的 <code>10/14</code> 內容解密後印出。
+            第一次就證明了 <code>proposed</code> 是<b>絕對值</b>（21/42），而不是我們假設的「基礎值＋待配置」。</li>
+        <li><b>唯讀診斷不等於免審查上線。</b>在自建環境中解析失敗只記 <code>undecodable</code>、不更改處理分支；部署與日誌內容仍須授權並經資料最小化檢查。</li>
+        <li><b>三點數據勝過三次猜測。</b>把 D1/D2/D3 三個時間點的我方送出值＋客戶端畫面值並列，
+            讓受控副本的靜態分析者能直接反解出顯示公式。</li>
+        <li><b>完整測試套件是最後防線。</b>本輪兩次「局部自測全綠、全套爆掉」都是舊斷言洩漏：
+            被改掉的行為仍被某個未跑的套件釘住。修復不是改測試，而是<b>刪除錯誤契約、更新為正確契約</b>。</li>
+    </ol>
+
+    <h2>七、可施工的落地公式（速查）</h2>
+    <pre><code># 配點落地（C2S 14 / C2S 10 field2 皆為絕對目標總值）
+delta       = proposed - 我方目前已配點總值        # 對「總值」取差，切勿再對職業基礎值取差（會重複累加）
+newAllocated = 已配點 + delta                     # 等價於 proposed - classBase
+if delta &lt; 0: return Result = 6                  # 降配點＝非法
+
+# 10 ACK（S2C）
+field1      = 我方總值 + delta  ( = proposed )
+keys 41..46 = classBase + max(0, delta)           # 夾止，永不低於職業基礎值
+keys 17/18/21 = 裝備 HP/MP/AC；keys 1/2/8/9 = 0
+
+# 15 ACK（S2C）——最常寫錯的一格
+field1      = 總點數池 totalAvailable             # 不是 remaining！
+field2      = spent
+field3      = 完成時間（可 0）
+field8      = 50                                  # 單項加點上限
+field10     = totalAvailable
+
+# 14 成功後的幀序
+12 (field5 = 已配點總值) → 14 (result=1) → 15</code></pre>
+
+    <h2>八、紅隊觀察 → 藍隊驗證與遙測</h2>
+    <p>
+        本節把「客戶端自算面板」翻譯成防守語言：左欄部分操作是<b>授權實驗室可設計的對抗檢查</b>，
+        並非本文聲稱已對外部系統執行的攻擊；右欄是建議的驗證與遙測，<b>不代表已全部實裝</b>。
+        −30 是自建環境的實測畫面誤差，不是第三方系統的資安事件。
+    </p>
+    <table>
+        <tr><th>紅側：重建端可觀察／可推論的行為</th><th>藍側：真值來源、驗證與遙測</th></tr>
+        <tr>
+            <td><b>面板形狀推論</b>：從 <code>10/12/14/15</code> 的欄位組合反推伺服端語意，再用自製回應觀察面板如何反應，嘗試讓 UI 顯示任意剩餘點數</td>
+            <td><b>伺服器是唯一真值來源</b>：客戶端送出的 <code>10 field2</code>／<code>14 field1</code> 一律視為「提案」；面板值僅供顯示，<b>永不作為授權依據</b>。遙測：以伺服端狀態（spent/remaining）為準的對帳，不採信 UI 回報值</td>
+        </tr>
+        <tr>
+            <td><b>提案值探測</b>：送出極大值、負值、低於目前總值，或連續送出多筆以觀察邊界行為</td>
+            <td><b>擁有權＋邊界</b>：每筆提案必須通過角色／工作階段綁定的擁有權檢查；<code>delta &lt; 0</code> 一律 <code>Result = 6</code> 拒絕，單項上限與總池上限雙重檢查，回應顯示值夾在職業基礎值以上。遙測：越界 delta 拒絕率、單項上限觸發數</td>
+        </tr>
+        <tr>
+            <td><b>重送與交錯</b>：同時送兩筆配點、不等 ACK 反覆重送，觀察是否重複計點或產生負剩餘</td>
+            <td><b>提交序列化＋冪等</b>：以期望版本／序號對齊，舊序號丟棄、重複請求合併。遙測：每角色配點請求速率、重複請求比例、序號衝突拒絕數</td>
+        </tr>
+        <tr>
+            <td><b>干擾幀序</b>：吞掉或延後權威快照幀，觀察客戶端基準是否被鎖在舊值、畫面是否停在過期數字</td>
+            <td><b>固定幀序 12 → 14 → 15</b>，提交前先送權威快照；快照與提交綁定同一版本。遙測：幀序偏離率、基準未更新即提交的次數</td>
+        </tr>
+        <tr>
+            <td><b>高頻請求</b>：以自動化方式大量送出配點請求，觀察點數池與狀態是否仍自洽</td>
+            <td><b>速率限制＋稽核</b>：每次配點寫入 audit（前後總值、delta、提案值、來源訊息、序號、工作階段），定期對帳。遙測：每分鐘配點請求分布、audit delta 不匹配數、總池為負的次數</td>
+        </tr>
+    </table>
+    <div class="callout">
+        <div class="callout-title">一句話總結</div>
+        <p>
+            <b>畫面對 ≠ 授權對。</b>凡是「由客戶端算給人看的數字」，都必須能在伺服端用稽核紀錄獨立重算一次；
+            兩邊對不上時，以伺服端紀錄為準，並把「對不上」這件事本身當成告警，而不是當成 UI 的小瑕疵。
+        </p>
+    </div>
+
+    <footer>
+        <p><strong>LM-Project</strong> ｜ 篇章 4：數值與玩法篇</p>
+        <p>本頁的角色資料僅來自自建測試環境；沒有對第三方後端資料庫的入侵結果。</p>
+    </footer>
+</div>
+</body>
+</html>

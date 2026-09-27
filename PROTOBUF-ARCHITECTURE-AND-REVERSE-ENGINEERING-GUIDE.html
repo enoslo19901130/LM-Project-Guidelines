@@ -1,0 +1,1315 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LM 客戶端 Wire 協定與 Google Protobuf 快速入門指引 | Authorized Local Analysis Notes</title>
+    <style>
+        :root {
+            --bg-primary: #0a0f1d;
+            --bg-secondary: #131b2e;
+            --bg-card: #1a243b;
+            --bg-code: #070b14;
+            --border-color: #2a3756;
+            --border-accent: #3b82f6;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --accent-blue: #38bdf8;
+            --accent-cyan: #22d3ee;
+            --accent-green: #34d399;
+            --accent-amber: #fbbf24;
+            --accent-rose: #f87171;
+            --accent-purple: #c084fc;
+            --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.75;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            max-width: 1240px;
+            width: 100%;
+            padding: 48px 24px;
+        }
+
+        header {
+            margin-bottom: 48px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 36px;
+        }
+
+        .badge-group {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            padding: 5px 14px;
+            border-radius: 9999px;
+            letter-spacing: 0.05em;
+        }
+
+        .badge-cyan { background: rgba(34, 211, 238, 0.12); color: var(--accent-cyan); border: 1px solid rgba(34, 211, 238, 0.3); }
+        .badge-purple { background: rgba(192, 132, 252, 0.12); color: var(--accent-purple); border: 1px solid rgba(192, 132, 252, 0.3); }
+        .badge-amber { background: rgba(251, 191, 36, 0.12); color: var(--accent-amber); border: 1px solid rgba(251, 191, 36, 0.3); }
+        .badge-green { background: rgba(52, 211, 153, 0.12); color: var(--accent-green); border: 1px solid rgba(52, 211, 153, 0.3); }
+
+        h1 {
+            font-size: 2.6rem;
+            font-weight: 800;
+            line-height: 1.25;
+            margin-bottom: 18px;
+            background: linear-gradient(135deg, #ffffff 10%, #93c5fd 60%, var(--accent-blue) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            font-size: 1.15rem;
+            color: var(--text-secondary);
+            max-width: 980px;
+            line-height: 1.65;
+        }
+
+        /* 單一直列目錄導航 (Single Vertical Column TOC) */
+        nav.toc-box {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 28px 32px;
+            margin: 36px 0;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+        }
+
+        .toc-title {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--accent-blue);
+            margin-bottom: 18px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .toc-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 100%;
+        }
+
+        .toc-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 12px 18px;
+            background: rgba(255, 255, 255, 0.025);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            text-decoration: none;
+            color: var(--text-primary);
+            transition: all 0.2s ease;
+        }
+
+        .toc-item:hover {
+            background: rgba(56, 189, 248, 0.08);
+            border-color: var(--accent-blue);
+            color: var(--accent-cyan);
+            transform: translateX(6px);
+        }
+
+        .toc-number {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 32px;
+            height: 32px;
+            background: rgba(56, 189, 248, 0.15);
+            color: var(--accent-cyan);
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 0.88rem;
+            font-family: var(--font-mono);
+        }
+
+        .toc-text {
+            font-size: 1.02rem;
+            font-weight: 500;
+        }
+
+        .toc-desc {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: auto;
+        }
+
+        h2 {
+            font-size: 1.85rem;
+            color: #ffffff;
+            margin-top: 56px;
+            margin-bottom: 24px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        h3 {
+            font-size: 1.35rem;
+            color: var(--accent-cyan);
+            margin-top: 28px;
+            margin-bottom: 16px;
+        }
+
+        h4 {
+            font-size: 1.1rem;
+            color: #cbd5e1;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+
+        p, ul, ol {
+            margin-bottom: 18px;
+            color: #cbd5e1;
+            font-size: 1.02rem;
+        }
+
+        ul, ol {
+            padding-left: 28px;
+        }
+
+        li {
+            margin-bottom: 10px;
+        }
+
+        strong {
+            color: #ffffff;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 28px;
+            margin: 28px 0;
+        }
+
+        @media (max-width: 860px) {
+            .container, .card, .grid-2 > * { min-width: 0; }
+            .grid-2 { grid-template-columns: minmax(0, 1fr); }
+            table { display: block; max-width: 100%; overflow-x: auto; }
+            h1 { font-size: 2.2rem; }
+            .toc-desc { display: none; }
+        }
+
+        .card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 28px;
+            box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.4);
+            margin-bottom: 28px;
+            transition: border-color 0.2s;
+        }
+
+        .card:hover {
+            border-color: #3b82f6;
+        }
+
+        /* 巢狀套娃視覺化圖解元件 */
+        .matryoshka-visualizer {
+            background: #0f172a;
+            border: 2px dashed #334155;
+            border-radius: 16px;
+            padding: 32px;
+            margin: 28px 0;
+        }
+
+        .box-outer {
+            border: 2px solid #38bdf8;
+            background: rgba(56, 189, 248, 0.05);
+            border-radius: 12px;
+            padding: 24px;
+            position: relative;
+            margin-bottom: 16px;
+        }
+
+        .box-middle {
+            border: 2px solid #fbbf24;
+            background: rgba(251, 191, 36, 0.06);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 16px 0;
+        }
+
+        .box-inner {
+            border: 2px solid #34d399;
+            background: rgba(52, 211, 153, 0.08);
+            border-radius: 8px;
+            padding: 16px;
+            margin: 12px 0;
+        }
+
+        .box-tag {
+            display: inline-block;
+            font-size: 0.8rem;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 4px;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+
+        .box-tag-blue { background: #0284c7; color: #fff; }
+        .box-tag-amber { background: #d97706; color: #fff; }
+        .box-tag-green { background: #059669; color: #fff; }
+
+        /* 四部曲 SOP 流程卡片 */
+        .sop-step-container {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            margin: 28px 0;
+        }
+
+        .sop-step-card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-left: 6px solid var(--accent-blue);
+            border-radius: 12px;
+            padding: 24px 28px;
+            transition: all 0.2s ease;
+        }
+
+        .sop-step-card:hover {
+            border-color: var(--accent-cyan);
+            border-left-color: var(--accent-cyan);
+            transform: translateX(4px);
+        }
+
+        .sop-step-header {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 14px;
+        }
+
+        .sop-step-badge {
+            background: rgba(56, 189, 248, 0.2);
+            color: var(--accent-cyan);
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-weight: 700;
+            font-family: var(--font-mono);
+            font-size: 0.9rem;
+        }
+
+        .sop-step-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 24px 0;
+            background-color: var(--bg-secondary);
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+
+        th, td {
+            padding: 14px 18px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 0.96rem;
+        }
+
+        th {
+            background-color: rgba(255, 255, 255, 0.06);
+            color: var(--accent-blue);
+            font-weight: 700;
+        }
+
+        tr:hover td {
+            background-color: rgba(255, 255, 255, 0.02);
+        }
+
+        code {
+            font-family: var(--font-mono);
+            background-color: rgba(255, 255, 255, 0.08);
+            color: var(--accent-cyan);
+            padding: 3px 7px;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+
+        pre {
+            background-color: var(--bg-code);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 20px;
+            overflow-x: auto;
+            margin: 20px 0;
+        }
+
+        pre code {
+            background-color: transparent;
+            padding: 0;
+            color: #e2e8f0;
+            font-size: 0.92rem;
+            line-height: 1.65;
+        }
+
+        .callout {
+            border-left: 5px solid var(--accent-blue);
+            background: rgba(56, 189, 248, 0.08);
+            padding: 20px 24px;
+            border-radius: 0 10px 10px 0;
+            margin: 24px 0;
+        }
+
+        .callout-amber {
+            border-left-color: var(--accent-amber);
+            background: rgba(251, 191, 36, 0.08);
+        }
+
+        .callout-rose {
+            border-left-color: var(--accent-rose);
+            background: rgba(248, 113, 113, 0.08);
+        }
+
+        .callout-green {
+            border-left-color: var(--accent-green);
+            background: rgba(52, 211, 153, 0.08);
+        }
+
+        .callout-title {
+            font-weight: 700;
+            font-size: 1.05rem;
+            color: #fff;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* 二進位 Hex 色彩解析器 */
+        .hex-stream {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            font-family: var(--font-mono);
+            background-color: var(--bg-code);
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+            margin: 20px 0;
+        }
+
+        .hex-block {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1px solid transparent;
+            transition: transform 0.15s;
+        }
+
+        .hex-block:hover {
+            transform: translateY(-2px);
+        }
+
+        .hex-val {
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+
+        .hex-lbl {
+            font-size: 0.72rem;
+            color: var(--text-secondary);
+            margin-top: 4px;
+            font-weight: 500;
+        }
+
+        .h-tag { background: rgba(56, 189, 248, 0.15); border-color: rgba(56, 189, 248, 0.4); color: var(--accent-blue); }
+        .h-len { background: rgba(251, 191, 36, 0.15); border-color: rgba(251, 191, 36, 0.4); color: var(--accent-amber); }
+        .h-str { background: rgba(52, 211, 153, 0.15); border-color: rgba(52, 211, 153, 0.4); color: var(--accent-green); }
+        .h-dex { background: rgba(192, 132, 252, 0.15); border-color: rgba(192, 132, 252, 0.4); color: var(--accent-purple); }
+        .h-con { background: rgba(248, 113, 113, 0.15); border-color: rgba(248, 113, 113, 0.4); color: var(--accent-rose); }
+        .h-sub { background: rgba(148, 163, 184, 0.12); border-color: rgba(148, 163, 184, 0.3); color: #cbd5e1; }
+
+        .formula-box {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            font-family: var(--font-mono);
+            background: rgba(34, 211, 238, 0.08);
+            border: 1px dashed var(--accent-cyan);
+            padding: 12px 20px;
+            border-radius: 8px;
+            color: var(--accent-cyan);
+            font-weight: 700;
+            font-size: 1.1rem;
+            margin: 14px 0;
+        }
+
+        /* 折疊自測題盒 */
+        details.quiz-item {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 18px 22px;
+            margin-bottom: 16px;
+            cursor: pointer;
+        }
+
+        details.quiz-item[open] {
+            border-color: var(--accent-cyan);
+        }
+
+        summary.quiz-question {
+            font-weight: 700;
+            color: #fff;
+            list-style: none;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 1.05rem;
+        }
+
+        summary.quiz-question::-webkit-details-marker {
+            display: none;
+        }
+
+        summary.quiz-question::after {
+            content: "展開解析 ▾";
+            font-size: 0.85rem;
+            color: var(--accent-blue);
+            font-weight: normal;
+        }
+
+        details.quiz-item[open] summary.quiz-question::after {
+            content: "收合解析 ▴";
+            color: var(--text-muted);
+        }
+
+        .quiz-answer {
+            margin-top: 16px;
+            padding-top: 14px;
+            border-top: 1px solid var(--border-color);
+            color: #cbd5e1;
+        }
+
+        footer {
+            margin-top: 80px;
+            padding-top: 32px;
+            border-top: 1px solid var(--border-color);
+            text-align: center;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        .top-nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+        }
+
+        .nav-back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--accent-cyan);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        .nav-back-btn:hover {
+            background: rgba(34, 211, 238, 0.12);
+            border-color: var(--accent-cyan);
+            transform: translateX(-3px);
+        }
+        @media (max-width: 860px) {
+            .top-nav, .top-nav > div { flex-wrap: wrap; gap: 12px; }
+        }
+        .mobile-scroll-note { display: none; }
+        @media (max-width: 600px) {
+            .container { padding: 28px 16px; overflow-wrap: anywhere; }
+            h1 { font-size: 2rem; }
+            .subtitle { font-size: 1rem; }
+            .card { padding: 18px; }
+            .sop-step-header { flex-wrap: wrap; }
+            .sop-step-card { padding: 18px 16px; }
+            .sop-step-title { min-width: 0; }
+            .nav-back-btn { min-height: 44px; }
+            footer a { max-width: 100%; }
+            footer a span { min-width: 0; overflow-wrap: anywhere; }
+            table th, table td { min-width: 180px; }
+            table th:first-child, table td:first-child { min-width: 72px; }
+            .mobile-scroll-note { display: block; color: var(--text-muted); margin: 0 0 16px; font-size: 0.94rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="top-nav">
+                <a href="index.html" class="nav-back-btn">⬅ 🏠 返回 LM-Project 首頁</a>
+                <div style="display: flex; align-items: center; gap: 16px;">
+                    <a href="https://github.com/enoslo19901130/LM-Project-Guidelines" target="_blank" rel="noopener noreferrer" class="nav-back-btn" style="color: var(--text-secondary);" title="前往 GitHub 專案倉庫">
+                        <svg style="display:inline-block; vertical-align:middle; fill:currentColor;" height="16" width="16" viewBox="0 0 16 16">
+                            <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
+                        </svg>
+                        <span>GitHub</span>
+                    </a>
+                    <span style="font-size: 0.88rem; color: var(--text-muted);">LM-Project ｜ 專案發起人：Enos</span>
+                </div>
+            </div>
+            <div class="badge-group">
+                <span class="badge badge-purple">LM-Project</span>
+                <span class="badge badge-cyan">LM 受控版本</span>
+                <span class="badge badge-amber">Reverse Engineering Core</span>
+                <span class="badge badge-green">Quick Primer / 快速入門</span>
+            </div>
+            <h1>LM 客戶端 Wire 協定與 Google Protobuf 快速入門指引</h1>
+            <p class="subtitle"><strong>專案命名：LM-Project ｜ 專案發起人：Enos</strong><br>為人類工程師與自主 AI Agent 打造的底層二進位通訊入門：從位元運算、套娃（Length-delimited Nesting）模型、容錯與 Fail-Closed 紀律，到本地授權樣本的靜態描述符復原、實驗室流量觀察與 Wire 處理器開發規範。</p>
+        </header>
+
+        <!-- 閱讀前提與工程邊界聲明 -->
+        <div class="callout callout-amber" style="margin-top: 0; margin-bottom: 36px;">
+            <div class="callout-title" style="color: var(--accent-amber); font-size: 1.1rem;">
+                ⚠️ 閱讀前提與專業邊界聲明 (Prerequisites &amp; Boundary Notice)
+            </div>
+            <p style="margin-bottom: 10px; color: #f1f5f9; line-height: 1.7;">
+                <strong>適用對象前提</strong>：本指引假設讀者已熟悉 C/C++ 二進位結構、序列化與網路框架，並願意在<strong>合法持有的本地樣本</strong>與<strong>自建隔離實驗室</strong>上做靜態分析與流量觀察。
+            </p>
+            <p style="margin-bottom: 10px; color: #cbd5e1; font-size: 0.96rem; line-height: 1.7;">
+                <strong>分析範圍聲明（高層概述）</strong>：本篇提到的「描述符復原」，指的是對<strong>自己合法持有的本地客戶端樣本</strong>做唯讀的靜態結構分析（例如從共用函式庫的符號與內嵌描述符資訊比對欄位編號與 WireType），以及對<strong>自建隔離實驗室伺服器</strong>所產生流量的觀察與比對；本庫亦保存<strong>歷史封包擷取與唯讀觀測記錄</strong>作為分析素材。本篇<strong>不提供、也不需要</strong>任何繞過保護、破解授權或取得他人資料的步驟。
+            </p>
+            <p style="margin-bottom: 0; color: #cbd5e1; font-size: 0.96rem; line-height: 1.7;">
+                <strong>邊界與資料來源</strong>：文中的資料庫讀寫與角色狀態，均指自建隔離實驗庫；客戶端資產來自受控本地副本，封包對照包含自建環境與既有唯讀紀錄，來源不可混為同一種實測。本專案<strong>未對第三方後端資料庫進行入侵、直接操作或資料擷取</strong>。本地與封存觀測僅用於理解協定契約，<strong>不能據此推論任何第三方系統的安全性</strong>；欄位結論綁定本次分析版本，換版本必須重新驗證。
+            </p>
+        </div>
+        <p class="mobile-scroll-note">手機閱讀：寬表格與程式碼可在各自區塊內左右滑動。</p>
+
+        <!-- 導航索引 (單一直列，不要橫排) -->
+        <nav class="toc-box">
+            <div class="toc-title">📖 入門章節目錄 (Quick Navigation)</div>
+            <div class="toc-list">
+                <a href="#ch-1" class="toc-item">
+                    <span class="toc-number">01</span>
+                    <span class="toc-text">根本原理：傳統二進位在 Protobuf 時代的典範轉移 (Fixed Offset vs TLV)</span>
+                    <span class="toc-desc">解析為什麼固定結構體思維在現代 TLV 協定下必然崩潰</span>
+                </a>
+                <a href="#ch-2" class="toc-item">
+                    <span class="toc-number">02</span>
+                    <span class="toc-text">底層傳輸原理：Tag、WireType 與 Varint 變長位元解密</span>
+                    <span class="toc-desc">位元運算公式 (Key = (F &lt;&lt; 3) | W) 與 4 種核心 WireType</span>
+                </a>
+                <a href="#ch-3" class="toc-item">
+                    <span class="toc-number">03</span>
+                    <span class="toc-text">核心架構模型：俄羅斯套娃 (Matryoshka) 深度解構與視覺化</span>
+                    <span class="toc-desc">理解 Protobuf 無 Object 形態本質與巢狀長度封裝遺漏事件</span>
+                </a>
+                <a href="#ch-4" class="toc-item">
+                    <span class="toc-number">04</span>
+                    <span class="toc-text">快速切入四部曲：全流程標準作業指南 (SOP)</span>
+                    <span class="toc-desc">實驗室觀察 ➔ 位元拆解 ➔ 編寫 Wire ➔ 離線合約測試</span>
+                </a>
+                <a href="#ch-5" class="toc-item">
+                    <span class="toc-number">05</span>
+                    <span class="toc-text">服務端開發五大黃金心法 (含 Before &amp; After 代碼對比)</span>
+                    <span class="toc-desc">可選性、有界跳過、Fail-Closed 閘門、長度封裝、最小注入</span>
+                </a>
+                <a href="#ch-6" class="toc-item">
+                    <span class="toc-number">06</span>
+                    <span class="toc-text">經典實戰案例拆解：Opcode 10 與 Type-12 AC 逐 Byte 剖析</span>
+                    <span class="toc-desc">14 Bytes 合成樣本 Hex 逐位元拆解與客戶端解析約束</span>
+                </a>
+                <a href="#ch-7" class="toc-item">
+                    <span class="toc-number">07</span>
+                    <span class="toc-text">手把手撰寫 Wire 處理器 (*Wire.java 標準模板)</span>
+                    <span class="toc-desc">容錯 decode、安全 skipWire、俄羅斯套娃 encode 完整工業實作</span>
+                </a>
+                <a href="#ch-8" class="toc-item">
+                    <span class="toc-number">08</span>
+                    <span class="toc-text">逆向工程工具鏈與排錯方法論</span>
+                    <span class="toc-desc">離線描述符目錄與伺服端有界 Hex 診斷日誌</span>
+                </a>
+                <a href="#ch-9" class="toc-item">
+                    <span class="toc-number">09</span>
+                    <span class="toc-text">快速自檢與實戰問答 (Quick Check &amp; FAQs)</span>
+                    <span class="toc-desc">5 大關鍵高頻陷阱即時自我查核</span>
+                </a>
+                <a href="#ch-10" class="toc-item">
+                    <span class="toc-number">10</span>
+                    <span class="toc-text">紅藍對照：本地契約復原如何決定伺服器防線 (Red / Blue Mapping)</span>
+                    <span class="toc-desc">證據邊界下的紅側復原路徑與藍側可觀測性對照</span>
+                </a>
+            </div>
+        </nav>
+
+        <!-- 章節 1 -->
+        <section id="ch-1">
+            <h2>⚡ 第一章：根本原理：傳統二進位在 Protobuf 時代的典範轉移</h2>
+            <p>在接手 LM 服務端的二進位協定工作前，必須先徹底洗去「把 C 結構體原封不動丟上線」的傳統封包處理思維：
+            
+            <div class="grid-2">
+                <div class="card">
+                    <h3 style="color: var(--accent-rose);">❌ 傳統封包：固定記憶體偏移量 (Fixed Byte Layout)</h3>
+                    <p>傳統 C/S 架構通常直接將 C 語言結構體（<code>struct</code>）以位元組流發送：</p>
+                    <pre><code>// 傳統 C 結構體
+struct CharacterPacket {
+    uint8_t  opcode;     // 1 byte (偏移量 0)
+    uint32_t charId;     // 4 bytes (偏移量 1~4)
+    uint16_t x;          // 2 bytes (偏移量 5~6)
+    uint16_t y;          // 2 bytes (偏移量 7~8)
+};</code></pre>
+                    <p><strong>致命缺陷（骨牌崩潰效應）</strong>：</p>
+                    <ul>
+                        <li>雙方代碼必須 100% 絕對二進位對齊。</li>
+                        <li>只要對端在 <code>charId</code> 之後插入一個 4-byte 欄位 <code>worldId</code>，本地端如果沒有同步更新，後面讀取的 <code>x</code> 與 <code>y</code> 就會全部錯位，角色座標飛越或進程直接崩潰。</li>
+                    </ul>
+                </div>
+
+                <div class="card">
+                    <h3 style="color: var(--accent-green);">✅ 現代封包：Protobuf 欄位編號與線型別</h3>
+                    <p>LM 受控客戶端的通訊採用 Google Protocol Buffers。封包不依賴固定欄位偏移；線格式可讀出欄位編號與 WireType，<strong>欄位名稱、語意和必要性仍須依 schema 或獨立證據判斷</strong>：</p>
+                    <pre><code>// Protobuf 概念資料流
+[Key: 欄位1+數值類型] -> [數值: 1002]
+[Key: 欄位2+字串類型] -> [長度: 6] -> [數值: "起始城"]</code></pre>
+                    <p><strong>格式相容性與限制</strong>：</p>
+                    <ul>
+                        <li><strong>欄位順序無關</strong>：客戶端先傳欄位 2 再傳欄位 1 完全合法。</li>
+                        <li><strong>省略需按契約判斷</strong>：部分欄位可省略，但零值與缺席不必然等價；必要欄位缺席時，業務層必須拒絕。</li>
+                        <li><strong>未知欄位有界跳過</strong>：新版本客戶端增加欄位 99 時，舊版伺服端<strong>在該欄位語法有界（長度可被精確計算）的條件下</strong>能跳過它，不會因為「看不懂」而崩潰——但這只是<strong>格式相容性</strong>。若長度越界、WireType 非法或游標無法對齊，必須有界地拒絕該封包；格式通過也<strong>不代表</strong>業務層授權通過（見第五章心法 2、第十章、第九章 Q2）。</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- 章節 2 -->
+        <section id="ch-2">
+            <h2>🧬 第二章：底層傳輸原理：Tag、WireType 與 Varint 變長位元解密</h2>
+            <p>在實體網路線（Wire）傳輸時，Protobuf 是如何讓接收端知道欄位編號與數據類型的？答案在於開頭的 <strong>Key</strong>。</p>
+
+            <div class="formula-box">
+                Key = (Field Number &lt;&lt; 3) | WireType
+            </div>
+            
+            <p>這個位元公式說明：<strong>Key 的低 3 位元（0~2 bits）代表資料形態（WireType），其餘高位元向右位移 3 位就是欄位編號（Field Number）</strong>。</p>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 120px;">WireType</th>
+                        <th style="width: 180px;">類型名稱</th>
+                        <th>對應資料型態</th>
+                        <th>底層讀取方式與特徵</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>0</code></td>
+                        <td><strong>Varint</strong></td>
+                        <td>int32, int64, uint32, bool, enum</td>
+                        <td>變長整數編碼。每個 byte 僅用低 7 位元儲存數值，最高位元（MSB）為 1 代表後續還有 byte；為 0 代表結束。數字越小佔用位元組越少。</td>
+                    </tr>
+                    <tr>
+                        <td><code>1</code></td>
+                        <td><strong>64-bit</strong></td>
+                        <td>fixed64, sfixed64, double</td>
+                        <td>固定長度，直接讀取接下來的 8 個位元組。</td>
+                    </tr>
+                    <tr>
+                        <td><code>2</code></td>
+                        <td><strong>Length-delimited</strong></td>
+                        <td>String, Bytes, <strong>嵌套子結構 (Embedded Message)</strong>, Packed 陣列</td>
+                        <td>長度前綴。先讀出一個 Varint 得到長度 $L$，接下來精確讀取 $L$ 個位元組作為內含資料。</td>
+                    </tr>
+                    <tr>
+                        <td><code>5</code></td>
+                        <td><strong>32-bit</strong></td>
+                        <td>fixed32, sfixed32, float</td>
+                        <td>固定長度，直接讀取接下來的 4 個位元組。</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="card">
+                <h3>🔢 實戰示範：數字 300 是如何被 Varint 編碼成 <code>AC 02</code> 的？</h3>
+                <ol>
+                    <li>十進位 <strong>300</strong> 轉為二進位：<code>0000 0001 0010 1100</code>。</li>
+                    <li>從低位開始，切分成 <strong>7 位元一組</strong>：
+                        <ul>
+                            <li>第 1 組（低 7 位）：<code>010 1100</code> (十進位 44)</li>
+                            <li>第 2 組（高 7 位）：<code>000 0010</code> (十進位 2)</li>
+                        </ul>
+                    </li>
+                    <li>加上最高位標誌（MSB）：
+                        <ul>
+                            <li>第 1 組後面還有資料，MSB 補 1：<code>1010 1100</code> ➔ 十六進位 <strong><code>0xAC</code></strong></li>
+                            <li>第 2 組是最後一組，MSB 補 0：<code>0000 0010</code> ➔ 十六進位 <strong><code>0x02</code></strong></li>
+                        </ul>
+                    </li>
+                    <li>最終在二進位流中呈現：<strong><code>AC 02</code></strong>（僅用 2 個 bytes 就傳輸完成，省下大量頻寬！）。</li>
+                </ol>
+            </div>
+        </section>
+
+        <!-- 章節 3 -->
+        <section id="ch-3">
+            <h2>🪆 第三章：核心架構模型：俄羅斯套娃 (Matryoshka) 深度解構與視覺化</h2>
+            <p><strong>初學者最常產生的疑惑</strong>：既然上面的 WireType 表格只有數字、字串和二進位 bytes，那像「角色資訊裡面包著裝備清單、裝備清單又包著單件道具」這種複雜物件是怎麼傳輸的？</p>
+            <p><strong>答案就是「套娃（Matryoshka）」機制！</strong></p>
+
+            <div class="callout callout-green">
+                <div class="callout-title">💡 套娃真理</div>
+                在 Protobuf 的底層傳輸世界裡，<strong>根本沒有「物件（Object/Message）」這個獨立類型！</strong>所有的物件在被裝入外層時，都只是被序列化成一段 <strong>WireType 2 (Length-delimited Bytes)</strong>。只要外層標記長度，裡面就是一隻獨立的子套娃！
+            </div>
+
+            <div class="matryoshka-visualizer">
+                <div class="box-outer">
+                    <span class="box-tag box-tag-blue">最外層套娃：NotifyStat（合成示意：世界廣播通知，總長度 18 Bytes）</span>
+                    <p style="font-size: 0.9rem; margin-bottom: 8px;"><code>[Key: Field 1 + Type 0] [Value: 角色流水號 10088]</code></p>
+                    
+                    <div class="box-middle">
+                        <span class="box-tag box-tag-amber">中層套娃：Attributes 屬性清單容器 (外盒標籤: Field 2, WireType 2, 長度: 8 Bytes)</span>
+                        <p style="font-size: 0.85rem; color: #cbd5e1; margin-bottom: 6px;">外層封裝：<code>[Tag: 0x12] [Len: 0x08]</code>（告訴解析器接下來 8 個字節是中號盒子內容）</p>
+
+                        <div class="box-inner">
+                            <span class="box-tag box-tag-green">最內層小娃娃：單一屬性 Attribute (長度: 4 Bytes)</span>
+                            <p style="font-size: 0.85rem; margin-bottom: 4px;"><code>[Key: Field 1 (屬性代碼)] [Value: 21 (代表物理防禦 AC)]</code></p>
+                            <p style="font-size: 0.85rem; margin-bottom: 0;"><code>[Key: Field 2 (計算結果)] [Value: 7 (有效防禦值)]</code></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="callout callout-rose">
+                <div class="callout-title">💥 實驗室踩坑紀錄：Type-12 物理防禦 (AC) 消失事件</div>
+                <p>在隔離實驗室的本地測試中，伺服器端已下發穿戴防具後的 AC（7），但客戶端面板上的防禦數字仍卡在初始值 10。</p>
+                <p><strong>根本原因</strong>：工程師在組裝封包時，把最內層的「小零件」直接拋進了最外層的大箱子，<strong>中間忘記套上「中層盒子」（缺少了外層 Field 2 的 WireType 2 長度封裝）！</strong></p>
+                <p>客戶端的 C++ 反序列化器打開外箱時，原本期待看見一個標註長度的中號盒子，打開才拿零件；結果一開箱發現零件散落一地，解析器直接回報格式毀損並整箱丟棄，面板只好回退顯示本地舊數據。</p>
+                <p><strong>重要提醒</strong>：<strong>「面板數字有變化」不等於伺服器端授權通過</strong>。客戶端顯示只是渲染層的回饋，權威狀態、持有權與冷卻計時一律以伺服器端判定為準——這一點在第十章的紅藍對照中會再具體說明。</p>
+            </div>
+        </section>
+
+        <!-- 章節 4：快速切入四部曲 -->
+        <section id="ch-4">
+            <h2>🚀 第四章：快速切入四部曲：全流程標準作業指南 (SOP)</h2>
+            <p>不論是人類工程師還是自主 AI Agent，當需要為伺服器新增、除錯或擴充任何通訊協定時，請<strong>嚴格遵循以下 4 步標準作業流程</strong>；這四步全部可在<strong>隔離實驗室與離線合約測試</strong>內完成，不需要接觸任何正式營運環境：</p>
+
+            <div class="sop-step-container">
+                <!-- Step 1 -->
+                <div class="sop-step-card">
+                    <div class="sop-step-header">
+                        <span class="sop-step-badge">STEP 01</span>
+                        <span class="sop-step-title">實驗室觀察與日誌定位 (Observe &amp; Locate)</span>
+                    </div>
+                    <p>當玩家在受控測試用戶端觸發特定功能（如加點、喝水、穿脫裝備、丟棄道具）而伺服器無反應或報錯時：</p>
+                    <ul>
+                        <li>檢查伺服器端執行期日誌或控制台標準輸出。</li>
+                        <li>搜索關鍵標籤 <code>world_frame_parse_reject</code> 或 <code>lobby_frame_parse_reject</code>，捕獲精確 Opcode 與有界（bounded）Hex 內容：
+                            <pre><code>[WARN] world_frame_parse_reject opcode=10 body_len=14 body_hex=120c0815100d18142009280a300b</code></pre>
+                        </li>
+                        <li><strong>產出物</strong>：確認問題發生的通訊通道（Lobby / World 兩條獨立通道）、Opcode 編號，以及<strong>有界長度</strong>的封包 Hex 字串。</li>
+                    </ul>
+                </div>
+
+                <!-- Step 2 -->
+                <div class="sop-step-card">
+                    <div class="sop-step-header">
+                        <span class="sop-step-badge">STEP 02</span>
+                        <span class="sop-step-title">離線描述符復原與位元拆解 (Deconstruct &amp; Identify)</span>
+                    </div>
+                    <p>利用核心公式與<strong>本地靜態分析產出的描述符目錄</strong>，將 Hex 翻譯為結構化欄位：</p>
+                    <ul>
+                        <li><strong>位元拆解</strong>：利用 <code>Key &gt;&gt;&gt; 3</code> 與 <code>Key &amp; 7</code>，標註外層 Tag 與 WireType（如 <code>12</code> = Field 2, WireType 2）。</li>
+                        <li><strong>描述符比對</strong>：開啟由<strong>自持本地樣本</strong>的共用原生函式庫離線萃取之協定目錄（如 <code>*-protobuf-catalog.json</code>），依據 Opcode 或業務線索（例如屬性試算訊息）比對對應的 Message 描述。</li>
+                        <li><strong>巢狀識別</strong>：確認外層是單純結構還是包裹了子 Message，查清每一層嵌套的 Tag 編號與型態。</li>
+                        <li><strong>標註不確定性</strong>：凡未經實驗室流量或離線合約測試雙向證實的欄位，一律標記為「推測」，不得直接寫入正式邏輯。</li>
+                    </ul>
+                </div>
+
+                <!-- Step 3 -->
+                <div class="sop-step-card">
+                    <div class="sop-step-header">
+                        <span class="sop-step-badge">STEP 03</span>
+                        <span class="sop-step-title">編寫或擴充 Wire 處理器 (Implement Wire Handler)</span>
+                    </div>
+                    <p>在通訊層的 Wire 套件（實作上歸屬於 <code>lmproject.lab.wire</code> 這類<strong>自有實驗室命名空間</strong>）下編寫或修改對應的 <code>*Wire.java</code>：
+                    <ul>
+                        <li><strong>解碼端 (C2S Decode)</strong>：
+                            採用 <code>LmProto.Cursor</code> + <code>while(cursor.remaining() &gt; 0)</code> + <code>switch(field)</code>。
+                            <strong>務必在 default 分支呼叫 <code>cursor.skipWire(wireType)</code></strong>，讓<strong>語法合法但語意未知</strong>的欄位被有界跳過；但缺少必要業務欄位、狀態不符或未授權的動作必須 Fail-Closed 拒絕（見心法 2）。
+                        </li>
+                        <li><strong>編碼端 (S2C Encode)</strong>：
+                            採用 <code>LmProto.fieldVarint()</code>、<code>LmProto.fieldString()</code> 等拼裝；遇子結構<strong>必須使用 <code>LmProto.fieldBytes(tag, childBytes)</code> 進行套娃長度前綴封裝</strong>。
+                        </li>
+                        <li><strong>業務銜接</strong>：Wire 類別僅處理二進位編解碼，解碼出的值物件（VO）傳遞給應用層處理；<strong>Wire 層不得直接觸碰任何資料庫或持久化設施</strong>，授權與持有權檢查一律在應用層與會話層完成。</li>
+                    </ul>
+                </div>
+
+                <!-- Step 4 -->
+                <div class="sop-step-card">
+                    <div class="sop-step-header">
+                        <span class="sop-step-badge">STEP 04</span>
+                        <span class="sop-step-title">註冊會話狀態機與離線迴歸 (Register &amp; Verify)</span>
+                    </div>
+                    <p>將實作完成的 Wire 接回伺服器運行迴圈，並在<strong>離線合約測試</strong>與<strong>隔離實驗室</strong>內進行多重驗證：
+                    <ul>
+                        <li><strong>狀態機路由</strong>：在會話層的 frame 接收處理器中註冊該 Opcode 分發，並在分發前完成認證與狀態檢查。</li>
+                        <li><strong>離線合約測試</strong>：建立或擴充單元測試，填入步驟 1 觀察到的 <code>body_hex</code> 進行位元組斷言，並額外加入「格式損毀」「缺必要欄位」「未授權動作」三組負向案例。</li>
+                        <li><strong>全量迴歸</strong>：以專案既有的離線測試入口跑完整套檢查，確認全數綠燈後再進行下一步。</li>
+                        <li><strong>實驗室驗證</strong>：於隔離實驗室重新執行動作，確認客戶端 UI 反應正確；<strong>此步驟僅作互動與渲染確認，權威狀態仍以伺服器端日誌與資料為準</strong>。</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- 章節 5 -->
+        <section id="ch-5">
+            <h2>🏆 第五章：服務端開發五大黃金心法 (含 Before &amp; After 代碼對比)</h2>
+
+            <div class="card">
+                <h3>心法 1：欄位順序無關；必要欄位由契約驗證</h3>
+                <div class="grid-2">
+                    <div>
+                        <h4 style="color: var(--accent-rose);">❌ 錯誤寫法（線性順序讀取）</h4>
+                        <pre><code>// 假設客戶端必先發 1 再發 2
+long id = cursor.readVarint();
+String name = cursor.readString();
+// 若客戶端先送 2，直接死當錯位！</code></pre>
+                    </div>
+                    <div>
+                        <h4 style="color: var(--accent-green);">✅ 正確寫法（TLV 動態循環）</h4>
+                        <pre><code>while (cursor.remaining() > 0) {
+    long key = cursor.readVarint();
+    int field = (int)(key >>> 3);
+    switch (field) {
+        case 1: id = cursor.readVarint(); break;
+        case 2: name = cursor.readString(); break;
+        default: cursor.skipWire(key & 7); break;
+    }
+}</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>心法 2：有界跳過（Fail-Safe Skip）與 Fail-Closed 的分界線</h3>
+                <p>「看不懂就跳過」只適用於<strong>語法層面有界</strong>的未知欄位：也就是說，該欄位的 WireType 讓解碼器能<strong>精確計算出它的位元組長度</strong>，因此跳過後游標仍能對齊到下一個合法 Tag。這是 Protobuf 格式本身的相容性保證，<strong>不是安全保證</strong>。</p>
+                <div class="callout callout-amber">
+                    <strong>實驗室教訓</strong>：先前伺服器端在解析兩個屬性試算 Opcode 時，遇到不認識的 Tag 便拋例外中斷連線。由於封包夾帶了客戶端自己的本地快取欄位，連續點擊加點的正常玩家被反覆踢下線——把「格式相容性」誤當成「一律不該斷線」，是典型的過度 Fail-Closed。
+                </div>
+                <div class="callout callout-rose">
+                    <strong>Fail-Closed 必須保留的閘門</strong>：以下四類情況<strong>必須拒絕並（必要時）中斷</strong>，不得以「跳過就好」帶過：
+                    <ul>
+                        <li><strong>線格式損毀</strong>：長度前綴越界、保留的 WireType 6 / 7、超過 64 位元的 Varint 或未終止值，必須立即中止解析；舊式 group WireType 3 / 4 雖屬 Protobuf 格式，但若本契約及解碼器不支援，也應明確拒絕。</li>
+                        <li><strong>缺少必要業務欄位</strong>：語法合法但業務上必需的欄位（如目標物件識別碼、動作參數）缺席或為零值，必須拒絕該次請求<strong>並記錄</strong>，不能默默套用預設值執行。</li>
+                        <li><strong>狀態不符</strong>：會話未認證、未進入世界、仍在交易／騎乘／死亡等不允許動作的狀態下收到突變型請求，必須拒絕。</li>
+                        <li><strong>未授權或越權</strong>：請求涉及的物件不屬於當前角色，或要求的動作超出角色權限——必須拒絕，且此類事件應納入藍側告警（見第十章）。</li>
+                    </ul>
+                    <p style="margin-bottom: 0;">一句話總結：<strong>WireType 層可以寬，業務與權限層必須嚴</strong>。寬是為了相容，嚴是為了安全。</p>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>心法 3：嵌套結構必須手動封裝長度（俄羅斯套娃規則）</h3>
+                <p>只要是包在別人肚子裡的子 Message，在輸出給外層前，必須先算好長度，用 <code>LmProto.fieldBytes(tag, childBytes)</code> 封裝打包。</p>
+            </div>
+
+            <div class="card">
+                <h3>心法 4：輕量動態編碼（Wire Utility）勝過靜態代碼生成（protoc）</h3>
+                <p>在契約持續微調的實驗室環境中，協定欄位經常調整。若使用 <code>protoc</code> 生成數千個 Java 類別，每次欄位微調就要耗費大量時間做全量編譯。自有的輕量 Wire 工具類允許直接在位元組陣列上組裝，零外部依賴、無額外物件配置負擔、改動可即時生效。</p>
+            </div>
+
+            <div class="card">
+                <h3>心法 5：最小合法注入原則（Minimal Conforming Injection）</h3>
+                <p><strong>絕對禁止「腦補欄位」</strong>。當描述符中可見欄位 1 到 20，但實驗室觀察到的合法請求只送欄位 1、2、10 時，伺服器端就只送這 3 個欄位。下發未經驗證的額外欄位，輕則使客戶端解析失敗、重者造成客戶端崩潰，也容易被防守方的封包形狀監控標記為異常。</p>
+            </div>
+        </section>
+
+        <!-- 章節 6 -->
+        <section id="ch-6">
+            <h2>🔬 第六章：經典實戰案例拆解：Opcode 10 與 Type-12 AC 逐 Byte 剖析</h2>
+
+            <h3>案例 A：Opcode 10 (屬性試算) 的 14 Bytes 合成樣本逐 Byte 拆解</h3>
+            <p>以下為一份<strong>依據實驗室觀察到的結構、但數值已合成改寫</strong>的教學樣本（14 Bytes），用來示範拆解方法；它<strong>不是任何環境的實際流量</strong>，也沒有任何真實角色、帳號或位置資訊：
+
+            <div class="hex-stream">
+                <div class="hex-block h-tag">
+                    <span class="hex-val">12</span>
+                    <span class="hex-lbl">Key: F2, T2</span>
+                </div>
+                <div class="hex-block h-len">
+                    <span class="hex-val">0c</span>
+                    <span class="hex-lbl">Len: 12B</span>
+                </div>
+                <div class="hex-block h-str">
+                    <span class="hex-val">08 15</span>
+                    <span class="hex-lbl">F1(STR): 21</span>
+                </div>
+                <div class="hex-block h-dex">
+                    <span class="hex-val">10 0d</span>
+                    <span class="hex-lbl">F2(DEX): 13</span>
+                </div>
+                <div class="hex-block h-con">
+                    <span class="hex-val">18 14</span>
+                    <span class="hex-lbl">F3(CON): 20</span>
+                </div>
+                <div class="hex-block h-sub">
+                    <span class="hex-val">20 09</span>
+                    <span class="hex-lbl">F4(WIS): 9</span>
+                </div>
+                <div class="hex-block h-sub">
+                    <span class="hex-val">28 0a</span>
+                    <span class="hex-lbl">F5(CHA): 10</span>
+                </div>
+                <div class="hex-block h-sub">
+                    <span class="hex-val">30 0b</span>
+                    <span class="hex-lbl">F6(INT): 11</span>
+                </div>
+            </div>
+
+            <div class="card">
+                <h4>逐字節反向解譯講義</h4>
+                <ul>
+                    <li><code>12</code>：位元為 <code>0001 0010</code> ➔ 低 3 位元 <code>010</code> 是 WireType 2，高位向右位移 3 位為 <code>2</code> ➔ <strong>「第 2 號欄位，長度前綴結構」</strong>。</li>
+                    <li><code>0c</code>：十六進位 0x0c = 十進位 <strong>12</strong> ➔ 緊接著後方的 12 個位元組全部是此子結構的內含資料！</li>
+                    <li>子結構內部：
+                        <ul>
+                            <li><code>08 15</code> ➔ Tag <code>0x08</code> (Field 1, Varint), 數值 <code>0x15</code> = <strong>21（力量 STR）</strong></li>
+                            <li><code>10 0d</code> ➔ Tag <code>0x10</code> (Field 2, Varint), 數值 <code>0x0d</code> = <strong>13（敏捷 DEX）</strong></li>
+                            <li><code>18 14</code> ➔ Tag <code>0x18</code> (Field 3, Varint), 數值 <code>0x14</code> = <strong>20（體質 CON）</strong></li>
+                            <li><code>20 09</code> ➔ Tag <code>0x20</code> (Field 4, Varint), 數值 <code>0x09</code> = <strong>9（精神 WIS）</strong></li>
+                            <li><code>28 0a</code> ➔ Tag <code>0x28</code> (Field 5, Varint), 數值 <code>0x0a</code> = <strong>10（魅力 CHA）</strong></li>
+                            <li><code>30 0b</code> ➔ Tag <code>0x30</code> (Field 6, Varint), 數值 <code>0x0b</code> = <strong>11（智力 INT）</strong></li>
+                        </ul>
+                    </li>
+                </ul>
+                <p><strong>關鍵啟示</strong>：若程式碼誤以為「封包開頭必為 Field 1」，就會在這個樣本上直接解析失敗。實際觀察到的請求<strong>並不送出 Field 1</strong>，而是直接送出 Field 2 巢狀的六維屬性總值——遵循心法 1 的 TLV 循環即可化解。<br><strong>反面提醒</strong>：這份樣本解析成功，僅代表<strong>格式正確</strong>；欄位值是否越界、目標是否歸屬本人、當前狀態是否允許變更，仍必須由伺服器端在業務層獨立判定。</p>
+            </div>
+        </section>
+
+        <!-- 章節 7 -->
+        <section id="ch-7">
+            <h2>🛠️ 第七章：手把手撰寫 Wire 處理器 (*Wire.java 標準模板)</h2>
+            <p>在伺服器端通訊層的 Wire 套件（本專案以 <code>lmproject.lab.wire</code> 這類自有命名空間組織）下開發任何協定處理器時，必須遵循以下標準工業範式：</p>
+
+            <pre><code>package lmproject.lab.wire;
+
+import java.util.Objects;
+
+/**
+ * 協議處理器標準範式：具備安全 Skip、順序無關、雙向容錯機制
+ */
+public final class ExampleWire {
+    private ExampleWire() {}
+
+    /**
+     * 解碼客戶端 C2S 請求
+     * 心法 1 &amp; 2：欄位順序無關、語法有界的未知欄位跳過；
+     * 但格式損毀與必要欄位缺漏一律 Fail-Closed。
+     */
+    public static ExampleRequest decode(byte[] data) {
+        // 空 body 不是「安全」的預設值：突變型請求必須 Fail-Closed
+        if (data == null || data.length == 0) {
+            throw new WireDecodeException(REASON_EMPTY_BODY);
+        }
+        LmProto.Cursor cursor = new LmProto.Cursor(data);
+        long targetId = 0;
+        int actionType = 0;
+        String memo = "";
+        boolean sawTargetId = false;
+
+        while (cursor.remaining() > 0) {
+            long key = cursor.readVarint();
+            long field = key >>> 3;
+            int wireType = (int) (key & 7);
+
+            switch ((int) field) {
+                case 1:
+                    if (wireType == 0) { targetId = cursor.readVarint(); sawTargetId = true; }
+                    else cursor.skipWire(wireType);
+                    break;
+                case 2:
+                    if (wireType == 0) actionType = (int) cursor.readVarint();
+                    else cursor.skipWire(wireType);
+                    break;
+                case 3:
+                    if (wireType == 2) memo = cursor.readString();
+                    else cursor.skipWire(wireType);
+                    break;
+                default:
+                    // 語法有界的未知 Tag：精確跳過，不中斷連線
+                    // （若 skipWire 發現長度越界／WireType 非法，會自行拋出格式損毀例外）
+                    cursor.skipWire(wireType);
+                    break;
+            }
+        }
+        // 必要業務欄位缺漏 → Fail-Closed，不可套用預設值
+        if (!sawTargetId || targetId == 0L) {
+            throw new WireDecodeException(REASON_MISSING_TARGET);
+        }
+        return new ExampleRequest(targetId, actionType, memo);
+    }
+
+    /**
+     * 編碼伺服端 S2C 響應封包
+     * 心法 3 & 4：輕量組裝、俄羅斯套娃嵌套封裝
+     */
+    public static byte[] encodeResponse(int statusCode, byte[] subPayload) {
+        // 1. 組裝基本欄位
+        byte[] field1 = LmProto.fieldVarint(1, statusCode);
+
+        // 2. 組裝嵌套子結構 (俄羅斯套娃)：將子 bytes 作為 WireType 2 封裝
+        byte[] field2 = (subPayload != null && subPayload.length > 0)
+                ? LmProto.fieldBytes(2, subPayload)
+                : new byte[0];
+
+        // 3. 串接輸出
+        return LmProto.concat(field1, field2);
+    }
+}</code></pre>
+        </section>
+
+        <!-- 章節 8 -->
+        <section id="ch-8">
+            <h2>🔍 第八章：本地契約復原工具鏈與排錯方法論</h2>
+            <div class="card">
+                <h3>1. 離線描述符目錄查詢 (local protobuf catalog)</h3>
+                <p>由<strong>自持本地樣本</strong>的共用原生函式庫以唯讀靜態分析萃取的二進位協定目錄（如 <code>*-protobuf-catalog.json</code>）：</p>
+                <ul>
+                    <li>收錄範圍為<strong>數千個 Message 與上萬個欄位</strong>（確切數量隨<strong>樣本版本</strong>浮動，實際數字請以當次本地萃取結果為準，勿引用本頁數字）。</li>
+                    <li>遇到未知 Opcode 時，先以此 JSON 搜尋 RTTI 符號或常數所對應的 Message 名稱。</li>
+                    <li><strong>使用限制</strong>：目錄只提供「名稱 ↔ 欄位編號 ↔ WireType」的<strong>候選對應</strong>。欄位語意仍需以實驗室流量與離線合約測試交叉驗證後才能落地。</li>
+                </ul>
+
+                <h3>2. 伺服器端有界 Hex 診斷日誌 (<code>world_frame_parse_reject</code>)</h3>
+                <p>所有協定解析失敗處均配置<strong>有界長度</strong>的 Hex 輸出（上限 24 bytes，避免日誌被單一封包灌爆）。當客戶端動作無反應時，先檢查控制台：</p>
+                <pre><code>world_frame_parse_reject opcode=10 body_len=14 body_hex=120c0815100d18142009280a300b</code></pre>
+                <p>拿到 <code>body_hex</code> 後，即可利用本指南第 2、6 章的規則進行人工逐位元反編譯。<br><strong>藍側提醒</strong>：這類日誌同時是防守方最直接的觀測點——<strong>解析拒絕率、拒絕原因的分布、以及同一會話的重複拒絕次數</strong>，都應納入監控（見第十章）。</p>
+            </div>
+        </section>
+
+        <!-- 章節 9 -->
+        <section id="ch-9">
+            <h2>📝 第九章：快速自檢與實戰問答 (Quick Check &amp; FAQs)</h2>
+            <p>在著手開發前，請透過以下高頻情境確認自己已具備完整的底層心理模型：</p>
+
+            <details class="quiz-item">
+                <summary class="quiz-question">Q1: 在 Protobuf 封包中讀到 Key = 0x08，請問它是幾號欄位？資料型態為何？</summary>
+                <div class="quiz-answer">
+                    <strong>標準解析</strong>：<br>
+                    0x08 轉為二進位為 <code>0000 1000</code>。<br>
+                    低 3 位元為 <code>000</code> = <strong>WireType 0 (Varint)</strong>。<br>
+                    高位右移 3 位（<code>8 &gt;&gt; 3</code>）為 <strong>1</strong>。<br>
+                    <strong>答案：Field 1, WireType 0 (Varint 整數/布林)</strong>。
+                </div>
+            </details>
+
+            <details class="quiz-item">
+                <summary class="quiz-question">Q2: 客戶端送來一個伺服器端沒定義過的未知 Tag 時，什麼情況可以跳過、什麼情況必須拒絕？</summary>
+                <div class="quiz-answer">
+                    <strong>標準解析</strong>：<br>
+                    Protobuf 的 Key 自帶 WireType 資訊，若該欄位<strong>語法有界</strong>，解碼器能精確計算其位元組長度並安全跳過——這是格式相容性，<strong>不是安全保證</strong>。<br>
+                    但以下情形<strong>必須 Fail-Closed</strong>：<br>
+                    ① 線格式損毀（長度越界、WireType 非法、Varint 未終止）；<br>
+                    ② 必要業務欄位缺漏（不得套用預設值默默執行）；<br>
+                    ③ 會話狀態不允許該動作；<br>
+                    ④ 目標不屬於當前角色或動作超出權限。<br>
+                    一律斷線則是另一個常見錯誤：會把客戶端無害的本地暫存欄位誤判為攻擊，導致正常玩家被踢下線。<br>
+                    <strong>結論：WireType 層可以寬，業務與權限層必須嚴。</strong>
+                </div>
+            </details>
+
+            <details class="quiz-item">
+                <summary class="quiz-question">Q3: 什麼是「套娃」問題？組裝子結構封包時最常犯的重大錯誤是什麼？</summary>
+                <div class="quiz-answer">
+                    <strong>標準解析</strong>：<br>
+                    Protobuf 沒有獨立的 Object 形態，子結構在二進位流中本質上是 WireType 2 的位元組區塊（套娃）。最常犯的重大錯誤是「漏套中間的盒子」——直接把最內層零件丟進最外層，缺少了中間層的 Tag 與長度前綴，導致客戶端 C++ 解析器判定格式損壞而整包丟棄，面板回退顯示舊資料。
+                </div>
+            </details>
+
+            <details class="quiz-item">
+                <summary class="quiz-question">Q4: 為什麼在本專案的實驗室環境中，使用自有的輕量 Wire 工具類優於 <code>protoc</code> 生成代碼？</summary>
+                <div class="quiz-answer">
+                    <strong>標準解析</strong>：<br>
+                    <code>protoc</code> 會生成龐大的 Java 類別，在契約持續微調的開發階段，每次欄位變動都會觸發繁重的全量編譯；而輕量工具類直接操作位元組陣列，無額外物件配置負擔，欄位調整可即時生效並立刻補上合約測試。
+                </div>
+            </details>
+
+            <details class="quiz-item">
+                <summary class="quiz-question">Q5: 什麼是「最小合法注入原則」？為什麼絕對不能「腦補欄位」？</summary>
+                <div class="quiz-answer">
+                    <strong>標準解析</strong>：<br>
+                    客戶端是預先編譯的 C++ 靜態結構。若伺服器端憑空猜測並下發客戶端未註冊的額外欄位，可能引發解析失敗甚至客戶端崩潰，也容易被防守方的封包形狀監控標記為異常。下發必須嚴格基於實驗室觀察（Golden Trace）證實的最小合法集合。
+                </div>
+            </details>
+        </section>
+
+        <!-- 章節 10：紅藍對照 -->
+        <section id="ch-10">
+            <h2>🛡️ 第十章：紅藍對照：本地契約復原如何決定伺服器防線</h2>
+            <p>前面九章講的是「怎麼把二進位協定寫對」。本章補上一個常被忽略的視角：<strong>同一份客戶端契約，攻擊者與防守者都會去讀</strong>。因此，理解「本地契約復原」能走多深，直接決定了伺服器端哪些閘門不能省。</p>
+
+            <div class="callout callout-amber">
+                <div class="callout-title">🚧 本章的證據邊界（先讀這段）</div>
+                <p style="margin-bottom: 0;">下表右側的藍側欄位是<strong>依據協定格式特性推導出的「應當可觀測」項目</strong>，屬於<strong>設計建議與待建檢查（proposed checks）</strong>，<strong>不是已實際執行的攻擊、不是已完成的滲透測試結果，也不是本專案偵測到的入侵事件</strong>。本專案<strong>未對任何未授權的後端資料庫進行直接存取、寫入或外洩</strong>；本庫中的歷史封包擷取與唯讀觀測記錄僅用於理解協定格式，<strong>不能用來推論任何第三方系統的安全性</strong>。</p>
+            </div>
+
+            <h3>10.1 紅側：證據受限的契約復原路徑</h3>
+            <p>下表描述的是<strong>在自己持有的本地樣本上復原契約</strong>所需的最小步驟。它的價值不在「攻擊」，而在於<strong>它恰好是防守方必須假設已經被掌握的路徑</strong>——防守方不能指望「攻擊者看不懂協定格式」來提供安全邊界。</p>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 60px;">階段</th>
+                        <th style="width: 220px;">動作</th>
+                        <th>能取得什麼</th>
+                        <th style="width: 200px;">證據強度</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>R1</strong></td>
+                        <td>本地樣本與中繼資料盤點</td>
+                        <td>檔案雜湊、符號表、匯出函式名稱、內嵌字串與版本標記。這些都是<strong>檔案層級的中繼資料</strong>，不需要執行任何東西。</td>
+                        <td>本地觀察（確定的靜態事實）</td>
+                    </tr>
+                    <tr>
+                        <td><strong>R2</strong></td>
+                        <td>離線描述符復原</td>
+                        <td>「Message 名稱 ↔ 欄位編號 ↔ WireType」的候選對應，以及哪些欄位是巢狀的。可以看出<strong>結構</strong>，但看不出<strong>語意與合法值域</strong>。</td>
+                        <td>本地觀察 + 推測（語意部分需另行驗證）</td>
+                    </tr>
+                    <tr>
+                        <td><strong>R3</strong></td>
+                        <td>自建實驗室流量觀察</td>
+                        <td>在<strong>自建伺服器</strong>上，由自己控制的測試用戶端所送出的實際 frame：Opcode、長度、欄位出現順序與取值範圍。</td>
+                        <td>本地觀察（僅覆蓋實驗室已實作的功能）</td>
+                    </tr>
+                    <tr>
+                        <td><strong>R4</strong></td>
+                        <td>構造差異請求</td>
+                        <td>把已知欄位改成邊界值（負數、極大值、他人物件識別碼、重複欄位），觀察伺服器端如何反應。此列為<strong>理論上可做的差異測試類型</strong>。</td>
+                        <td>假設性檢查；本頁沒有此類差異請求已執行的證據</td>
+                    </tr>
+                    <tr>
+                        <td><strong>R5</strong></td>
+                        <td>對照結果、修正契約</td>
+                        <td>對已觀察的契約落差建立離線迴歸；其他邊界值測試應先取得自建環境的結果，再考慮補驗證。</td>
+                        <td>已觀察案例可重現；其餘屬待驗證建議</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="callout callout-rose">
+                <div class="callout-title">⚠️ R4 的紅線</div>
+                <p style="margin-bottom: 0;">R4 僅可在自建實驗室、對自有服務端執行。把差異請求送向未獲授權的正式服務是越界行為；既有唯讀對照不等於已執行對外差異測試。本頁不提供規避偵測或取得他人資料的作法。<br><strong>另請注意</strong>：邊界值檢查是為了驗證服務端不變量，預期越界請求被拒絕。</p>
+            </div>
+
+            <h3>10.2 藍側：每一階段對應的可觀測性與建議檢查（proposed checks）</h3>
+            <p>以下清單是<strong>建議應當存在的檢查與觀測點</strong>，屬於待建／待驗證項目；本專案<strong>未對任何第三方系統執行過這些檢查</strong>，也不以此主張任何既有環境的實際安全水位。</p>
+            <div class="grid-2">
+                <div class="card">
+                    <h3 style="font-size: 1.15rem;">🔎 契約面（對應 R1–R2）</h3>
+                    <ul>
+                        <li><strong>最小注入稽核</strong>：確認下發欄位集合是最小合法集合，未夾帶推測欄位（心法 5）。</li>
+                        <li><strong>契約版本對帳</strong>：客戶端更新時，比對描述符目錄差異，逐一確認新增欄位的語意與必要性。</li>
+                        <li><strong>假設檢驗</strong>：把「攻擊者讀不到描述符」明確列為<strong>不成立的假設</strong>，不要讓它出現在威脅模型的「我們比較安全」欄位裡。</li>
+                    </ul>
+                </div>
+
+                <div class="card">
+                    <h3 style="font-size: 1.15rem;">🧱 輸入面（對應 R3–R4）</h3>
+                    <ul>
+                        <li><strong>有界解析</strong>：巢狀深度、單封長度、陣列元素數都要設上限，防止資源耗盡。</li>
+                        <li><strong>值域與型別檢查</strong>：即使 WireType 正確，欄位值仍須落在合法值域內（負數、溢出值一律拒絕）。</li>
+                        <li><strong>跳過僅限語法有界者</strong>：只有在 WireType 讓長度可被精確計算時才跳過未知欄位；<strong>凡是長度越界、WireType 非法或游標無法對齊者，一律有界地拒絕該封包</strong>，不得放行。</li>
+                        <li><strong>Fail-Closed 四閘門</strong>：格式損毀、必要欄位缺漏、狀態不符、越權操作，全部拒絕並記錄（心法 2）。</li>
+                    </ul>
+                </div>
+
+                <div class="card">
+                    <h3 style="font-size: 1.15rem;">🧭 業務面（授權與持有權）</h3>
+                    <ul>
+                        <li><strong>持有權檢查</strong>：所有作用於物件的操作，必須驗證物件歸屬當前會話；不可僅信任封包內攜帶的識別碼。</li>
+                        <li><strong>狀態機閘門</strong>：交易中、騎乘中、死亡中、世界中未認證等狀態，分別定義允許的操作集合。</li>
+                        <li><strong>速率與去重</strong>：同一 Opcode 的短時間高頻請求應觸發節流，抵禦「連續點擊」型壓力。</li>
+                    </ul>
+                </div>
+
+                <div class="card">
+                    <h3 style="font-size: 1.15rem;">📡 可觀測性面</h3>
+                    <ul>
+                        <li><strong>解析拒絕率與原因分布</strong>：格式損毀、缺欄位、越權各自計數，異常上升即為訊號。</li>
+                        <li><strong>每會話拒絕次數</strong>：短時間內大量重複拒絕是自動化嘗試的典型特徵。</li>
+                        <li><strong>狀態否決日誌</strong>：記錄「因狀態／權限被拒」的動作，便於後續回溯。</li>
+                        <li><strong>日誌衛生</strong>：Hex 輸出必須有界，且不得寫入憑證、token 或個人識別資訊。</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="callout callout-green">
+                <div class="callout-title">✅ 為什麼「客戶端契約復原」決定伺服器防線</div>
+                <p style="margin-bottom: 8px;">因為 <strong>Wire 上的欄位編號與線型別可以被觀察</strong>：持有本地樣本的人可透過描述符與受控流量逐步比對巢狀結構；欄位語意仍須獨立佐證。這意味著：</p>
+                <ul style="margin-bottom: 8;">
+                    <li>「看不懂封包所以安全」不是可用的防線；</li>
+                    <li>格式相容性（能跳過未知欄位）與安全授權（能不能執行這個動作）是<strong>兩件不同的事</strong>，後者必須由伺服器端獨立判定；</li>
+                    <li>因此所有真正的安全邊界，都必須落在<strong>伺服器端的授權、狀態與持有權檢查</strong>上，而不是落在「格式難以偽造」這種假設上。</li>
+                </ul>
+                <p style="margin-bottom: 0;"><strong>再次強調</strong>：客戶端面板顯示數值改變，僅代表渲染層收到並接受了資料，<strong>不代表伺服器端授權通過</strong>；權威狀態一律以伺服器端為準。</p>
+            </div>
+        </section>
+
+        <footer>
+            <p><strong>LM-Project</strong> ｜ 專案發起人：<strong>Enos</strong> ｜ Protocol Architecture &amp; Reverse Engineering</p>
+            <p style="margin: 8px 0;">
+                <a href="https://github.com/enoslo19901130/LM-Project-Guidelines" target="_blank" rel="noopener noreferrer" style="color: var(--accent-blue); text-decoration: none; display: inline-flex; align-items: center; gap: 6px; font-weight: 600;">
+                    <svg style="display:inline-block; vertical-align:middle; fill:currentColor;" height="16" width="16" viewBox="0 0 16 16">
+                        <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
+                    </svg>
+                    <span>GitHub 專案倉庫：https://github.com/enoslo19901130/LM-Project-Guidelines</span>
+                </a>
+            </p>
+            <p>LM-Project Local Wire Contract &amp; Protobuf Notes ｜ 自建實驗室案例及藍隊防禦參考</p>
+        </footer>
+    </div>
+</body>
+</html>
