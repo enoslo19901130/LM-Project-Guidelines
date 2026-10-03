@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>篇章 2：會話篇 ｜ 身份鏈、用途隔離與版本漂移 (LM-Project)</title>
+    <style>
+        :root {
+            --bg-primary: #0a0f1d; --bg-card: #1a243b; --bg-card-hover: #22304e; --bg-code: #070b14;
+            --border-color: #2a3756; --text-primary: #f8fafc; --text-secondary: #94a3b8; --text-muted: #64748b;
+            --accent-blue: #38bdf8; --accent-cyan: #22d3ee; --accent-green: #34d399;
+            --accent-amber: #fbbf24; --accent-rose: #f87171; --accent-purple: #c084fc;
+            --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: var(--font-sans); background-color: var(--bg-primary); color: var(--text-primary);
+               line-height: 1.75; display: flex; justify-content: center; }
+        .container { max-width: 1180px; width: 100%; padding: 56px 24px; display: flex; flex-direction: column; }
+        .top-navbar { display: flex; align-items: center; justify-content: space-between;
+                      padding-bottom: 24px; border-bottom: 1px solid var(--border-color); margin-bottom: 40px; }
+        .brand-logo { display: flex; align-items: center; gap: 12px; font-size: 1.25rem; font-weight: 800; color: #fff; text-decoration: none; }
+        .brand-badge { font-size: 0.72rem; font-weight: 700; padding: 3px 10px; border-radius: 9999px;
+                       background: rgba(192,132,252,0.15); color: var(--accent-purple); border: 1px solid rgba(192,132,252,0.35); }
+        .back-link { color: var(--text-secondary); text-decoration: none; font-size: 0.9rem; font-weight: 600; }
+        .back-link:hover { color: var(--accent-cyan); }
+        h1 { font-size: 2.3rem; font-weight: 800; line-height: 1.3; margin-bottom: 14px;
+             background: linear-gradient(135deg, #ffffff 15%, #93c5fd 60%, var(--accent-blue) 100%);
+             -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .lead { color: var(--text-secondary); font-size: 1.05rem; max-width: 900px; margin-bottom: 36px; }
+        .badge-group { display: inline-flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+        .badge { font-size: 0.72rem; font-weight: 700; padding: 4px 12px; border-radius: 9999px; letter-spacing: 0.04em; }
+        .badge-purple { background: rgba(192,132,252,0.12); color: var(--accent-purple); border: 1px solid rgba(192,132,252,0.3); }
+        .badge-cyan { background: rgba(34,211,238,0.12); color: var(--accent-cyan); border: 1px solid rgba(34,211,238,0.3); }
+        .badge-amber { background: rgba(251,191,36,0.12); color: var(--accent-amber); border: 1px solid rgba(251,191,36,0.3); }
+        .badge-green { background: rgba(52,211,153,0.12); color: var(--accent-green); border: 1px solid rgba(52,211,153,0.3); }
+        h2 { font-size: 1.5rem; font-weight: 700; margin: 48px 0 18px; color: #fff; }
+        h3 { font-size: 1.12rem; font-weight: 700; margin: 28px 0 12px; color: var(--accent-cyan); }
+        p { color: #cbd5e1; margin-bottom: 14px; }
+        ul, ol { color: #cbd5e1; margin: 0 0 16px 22px; }
+        li { margin-bottom: 8px; }
+        code { font-family: var(--font-mono); font-size: 0.88em; background: var(--bg-code); color: var(--accent-amber);
+               padding: 2px 6px; border-radius: 5px; border: 1px solid var(--border-color); }
+        pre { background: var(--bg-code); border: 1px solid var(--border-color); border-radius: 10px;
+              padding: 18px 20px; overflow-x: auto; margin-bottom: 18px; }
+        pre code { background: none; border: none; color: #e2e8f0; padding: 0; font-size: 0.86rem; line-height: 1.7; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 0.92rem; }
+        th, td { border: 1px solid var(--border-color); padding: 10px 12px; text-align: left; vertical-align: top; }
+        th { background: var(--bg-card); color: #fff; font-weight: 700; }
+        td { color: #cbd5e1; }
+        .callout { border-left: 5px solid var(--accent-amber); background: rgba(251,191,36,0.08);
+                   padding: 20px 24px; border-radius: 0 12px 12px 0; margin-bottom: 28px; }
+        .callout-title { font-weight: 700; color: var(--accent-amber); margin-bottom: 6px; }
+        .callout.ok { border-left-color: var(--accent-green); background: rgba(52,211,153,0.08); }
+        .callout.ok .callout-title { color: var(--accent-green); }
+        .callout.bad { border-left-color: var(--accent-rose); background: rgba(248,113,113,0.08); }
+        .callout.bad .callout-title { color: var(--accent-rose); }
+        footer { margin-top: 56px; padding-top: 28px; border-top: 1px solid var(--border-color);
+                 text-align: center; font-size: 0.88rem; color: var(--text-muted); }
+        .mobile-scroll-note { display: none; }
+        @media (max-width: 768px) {
+            .container { min-width: 0; padding: 28px 16px; overflow-wrap: anywhere; }
+            .top-navbar { flex-wrap: wrap; gap: 12px; margin-bottom: 24px; }
+            .brand-logo { flex-wrap: wrap; }
+            .back-link { display: inline-flex; align-items: center; min-height: 44px; }
+            h1 { font-size: 1.8rem; }
+            .callout { padding: 16px; }
+            table { font-size: 0.94rem; display: block; max-width: 100%; overflow-x: auto; }
+            th, td { min-width: 180px; }
+            .mobile-scroll-note { display: block; color: var(--text-muted); font-size: 0.94rem; margin-bottom: 12px; }
+            pre code { font-size: 0.94rem; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <nav class="top-navbar">
+        <a href="index.html" class="brand-logo"><span>🛡️ LM-Project</span><span class="brand-badge">篇章 2</span></a>
+        <a href="index.html" class="back-link">← 返回門戶首頁</a>
+    </nav>
+
+    <div class="badge-group">
+        <span class="badge badge-green">本地可閱讀</span>
+        <span class="badge badge-cyan">LM-Project 實驗室</span>
+        <span class="badge badge-purple">身份鏈 × 用途隔離 × 版本漂移</span>
+        <span class="badge badge-amber">藍隊檢查：可稽核、可拒絕、可回退</span>
+    </div>
+    <h1>篇章 2：會話篇 ｜ 身份鏈、用途隔離與版本漂移</h1>
+    <p class="lead">
+        同一條「登入到拿到可進世界憑證」的鏈，在兩個客戶端版本之間可能少一站、也可能多一站；同一筆邏輯欄位，在不同版本的
+        wire 上還可能掛著不同的不透明鍵名。本篇以 LM-Project 自有測試環境的唯讀流量與靜態資產為例，整理三件事：
+        會話鏈的形狀、最容易被誤判為「已授權」的三種訊號，以及服務端要如何在不放寬認證的前提下同時相容多個版本。
+    </p>
+
+    <div class="callout">
+        <div class="callout-title">⚠️ 適用前提與實驗邊界</div>
+        <p>
+            本頁是 LM-Project <b>自建實驗室</b>的工程案例研究：觀察對象是<b>受控的本地客戶端副本</b>與<b>自建隔離的測試服務端</b>；
+            既有唯讀流量僅作對照，<b>未對第三方後端資料庫進行入侵或直接操作</b>。文中所有 token、帳號、裝置識別與欄位鍵皆<b>去敏或遮罩</b>，
+            數值與站點順序只適用於其來源版本，換版本請重新驗證。
+        </p>
+        <p>
+            證據強度標記沿用全站慣例：<b>【本地觀測】</b>＝自有環境量測到的事實；<b>【推論】</b>＝由觀測推導、尚未直接驗證；
+            <b>【未驗證】</b>＝已提出或已實作但<b>尚未證明有效</b>。
+        </p>
+    </div>
+    <p class="mobile-scroll-note">手機閱讀：寬表格與程式碼可在各自區塊內左右滑動。</p>
+
+    <h2>一、會話鏈的形狀（本地觀測）</h2>
+    <p>
+        在自建環境中，客戶端從「按下登入」到「取得可進世界的憑證」，會經過多個站點；下面是<b>去敏後</b>的形狀示意
+        （站名以用途表述，非實際路徑字串）：
+    </p>
+    <pre><code>[登入頁 WebView] --表單提交--> [帳密驗證站] --回呼攜帶短期憑證--> [會話交換站] --會話識別-->
+[會話完成站] --取得登入狀態--> [認證型別查詢站] --（必要時）--> [二次認證：開始/完成]
+--> [憑證發放站 authn] --> [大廳/世界准入]</code></pre>
+    <table>
+        <tr><th>站點（用途）</th><th>輸入</th><th>輸出</th><th>藍隊重點</th></tr>
+        <tr><td>登入頁（WebView）</td><td>畫面與指令碼</td><td>表單提交</td><td>頁面來源與回呼白名單</td></tr>
+        <tr><td>帳密驗證站</td><td>帳號與密碼雜湊（不落明文）</td><td>短期憑證</td><td>雜湊、速率限制、錯誤不回傳帳號是否存在</td></tr>
+        <tr><td>會話交換站</td><td>短期憑證</td><td>會話識別（不透明）</td><td>一次性、綁定來源、可撤銷</td></tr>
+        <tr><td>會話完成站</td><td>會話識別</td><td>登入狀態</td><td>狀態不得由客戶端自報決定</td></tr>
+        <tr><td>認證型別／二次認證站</td><td>登入狀態</td><td>一次性驗證碼與其交換結果</td><td>單次碼、逾期、用途隔離</td></tr>
+        <tr><td>憑證發放站（authn）</td><td>登入狀態（＋二次認證結果）</td><td>可帶往大廳／世界的憑證</td><td>只由已驗證結果產生；不得匿名升格</td></tr>
+    </table>
+    <p>
+        <b>【本地觀測】版本漂移</b>：兩個受測版本在一次登入窗內，站點集合並不完全相同——其中一版在登入前多了一次
+        <b>「供應商憑證交換」</b>（provider grant）呼叫，另一版沒有；後續站點的欄位鍵名也不同（見第三節）。
+        單一版本的單次擷取<b>不足以</b>推論另一版本一定沒有該站點；本頁把它當成「版本間流程會漂移」的實例，而不是通則。
+    </p>
+
+    <h2>二、三種最容易被誤判為「已授權」的訊號</h2>
+    <table>
+        <tr><th>訊號</th><th>紅隊視角</th><th>藍隊控制</th></tr>
+        <tr>
+            <td><b>格式合法</b>（欄位齊、型別對）</td>
+            <td>把請求組得「像」正常客戶端，觀察服務端是否直接相信欄位內容</td>
+            <td>每個站點重驗身份、資源歸屬與一次性；<b>格式正確 ≠ 操作授權</b></td>
+        </tr>
+        <tr>
+            <td><b>畫面成功</b>（客戶端顯示已登入）</td>
+            <td>客戶端畫面由本機狀態驅動，與後端授權可以不同步</td>
+            <td>以服務端結果為權威；畫面成功不作為授權或稽核依據</td>
+        </tr>
+        <tr>
+            <td><b>客戶端自報值</b>（應用識別、版本字串）</td>
+            <td>應用識別與版本都寫在客戶端內、可被重放或改寫；同一應用識別可能跨版本共用</td>
+            <td>只當<b>相容性選擇鍵</b>：缺漏、未知或彼此衝突 → 明確拒絕；<b>永不</b>作為帳號或已驗證身份，也不作為身份欄位的退路</td>
+        </tr>
+    </table>
+
+    <h2>三、用途隔離：供應商憑證 ≠ 玩家會話</h2>
+    <p>
+        最危險的形狀是：某個「供應商交換」站回傳的憑證，因為實作方便，被下游拿來換取<b>玩家</b>的登入憑證、二次認證或大廳資格。
+        一旦如此，未經驗證的客戶端自報值（如應用識別）就等於走進了玩家憑證鏈。<b>【本地觀測】</b>在自建環境中，
+        供應商交換與玩家會話在資料模型上可以只差一個<b>用途（purpose）</b>與<b>主體（subject）</b>欄位——這個差異肉眼幾乎看不出來。
+    </p>
+    <div class="callout bad">
+        <div class="callout-title">✖ 反模式：只改名字的隔離</div>
+        <p>
+            把供應商憑證的用途「改名」成玩家會話、或讓下游「沿用既有派生路徑」取得玩家憑證，等於沒有隔離。
+            隔離必須在<b>每個消費者</b>上成立：憑證發放、二次認證、大廳與世界准入都要各自檢查用途與家族，而不是只檢查簽章或格式。
+        </p>
+    </div>
+    <table>
+        <tr><th>控制</th><th>要求</th></tr>
+        <tr><td>用途與家族</td><td>供應商憑證具獨立 purpose／family；<b>不可</b>換取玩家憑證、二次認證或大廳／世界資格</td></tr>
+        <tr><td>一次性與期限</td><td>交換碼單次使用、短效、可撤銷；重放與逾期明確拒絕</td></tr>
+        <tr><td>產生條件</td><td>玩家會話只由「已驗證的帳密」或「已證的供應商身份結果」產生；沒有後者契約時，沿既有登入驗證，<b>不得發明匿名升格</b></td></tr>
+        <tr><td>撤銷語義</td><td>撤銷覆蓋憑證家族；登出／到期後在途身份不得再用</td></tr>
+    </table>
+
+    <h2>四、版本漂移：為什麼需要「回應層 Profile」</h2>
+    <p>
+        <b>【本地觀測】</b>同一筆邏輯欄位在兩個版本的不透明鍵名不同（欄位鍵本身是被混淆的固定字串）；同一條鏈在其中一版多了一站。
+        這代表服務端<b>不能</b>用「一組硬編碼欄位」同時服務所有版本，也不該把版本判斷散落在各處 <code>if</code>。
+        可行的工程形狀是：把「某個客戶端選擇鍵＋版本」對應到一組<b>回應層設定（Profile）</b>，由<b>外部設定檔</b>驅動、可熱重載，
+        且 **只決定回應的欄位、型別、別名、封套與非敏感常數**。
+    </p>
+    <table>
+        <tr><th>規則</th><th>理由</th></tr>
+        <tr><td>選擇鍵只作選擇</td><td>應用識別／版本字串可被重放；不可作為身份、不可 fallback 到身份欄位</td></tr>
+        <tr><td>未知或衝突 → 明確拒絕</td><td>回固定原因的 4xx；不得「回預設成功」或沉默降級</td></tr>
+        <tr><td>Profile 不改判認證</td><td>成功／失敗、token、主體、有效期、二次認證能力<b>不得</b>由設定偽造或改判</td></tr>
+        <tr><td>熱重載要原子</td><td>完整解析與驗證後整份發布；壞檔保留上一版良好設定；單一請求不混用兩代設定</td></tr>
+        <tr><td>回退要單檔可還原</td><td>還原設定檔並重載後，新家族回到原行為；既有家族沿原快照到登出／到期</td></tr>
+        <tr><td>稽核要可追溯</td><td>記錄路由、Profile 版本、設定內容雜湊與選擇原因（遮罩）；<b>不記</b>憑證、完整請求／回應或帶 token 的路徑</td></tr>
+    </table>
+    <div class="callout ok">
+        <div class="callout-title">✔ 一句話原則</div>
+        <p>Profile 只能讓「已授權的業務結果」用不同版本看得懂的方式呈現；它<b>不能讓未授權的請求變成通過</b>。</p>
+    </div>
+
+    <h2>五、藍隊檢查清單</h2>
+    <table>
+        <tr><th>#</th><th>檢查</th><th>通過標準</th></tr>
+        <tr><td>1</td><td>客戶端自報值的處理</td><td>僅作選擇鍵；未知／衝突回固定原因；無身份 fallback</td></tr>
+        <tr><td>2</td><td>會話與選擇鍵的綁定</td><td>同一會話家族沿固定 Profile 快照；登出／到期後失效</td></tr>
+        <tr><td>3</td><td>供應商憑證用途隔離</td><td>無法換取玩家憑證／二次認證／大廳或世界資格</td></tr>
+        <tr><td>4</td><td>一次性與重放</td><td>交換碼單次、短效、逾期與重放皆拒絕</td></tr>
+        <tr><td>5</td><td>本地登入仍可用</td><td>設定不得把失敗改判成功；有效帳密流程不受 Profile 影響</td></tr>
+        <tr><td>6</td><td>設定熱重載</td><td>有效改檔生效、壞檔拒絕且保留上一版；還原單檔可回退</td></tr>
+        <tr><td>7</td><td>稽核欄位</td><td>路由、Profile、設定雜湊、選擇原因可查；無憑證外洩</td></tr>
+        <tr><td>8</td><td>錯誤路徑</td><td>錯序、缺欄、衝突都有可追溯的拒絕原因；不以空物件冒充成功</td></tr>
+        <tr><td>9</td><td>重啟語義</td><td>重啟清空記憶體會話；文件不宣稱可保留在途登入</td></tr>
+        <tr><td>10</td><td>版本新增流程</td><td>新版本先補「選擇鍵↔版本↔回應形狀」證據，再以合成 fixture 驗證，最後才用真實來源驗收</td></tr>
+    </table>
+
+    <h2>六、待驗與延伸</h2>
+    <ul>
+        <li><b>登入持續性【未驗證】</b>：官方行為是登入後保留、按「登出」才需重新登入；自有重建版在登入鏈未完整前，無法判定是否每次啟動都需重打帳密。列為登入鏈打通後的第一個驗收項。</li>
+        <li><b>站點集合的版本差異【本地觀測，單次擷取】</b>：僅代表兩個受測版本各一次登入窗；需更多樣本才能區分「版本差異」與「條件差異」。</li>
+        <li><b>心跳與超時</b>：屬會話狀態機的一部分，本頁不展開數值；數值需以各自版本的實測重新驗證。</li>
+        <li><b>供應商回應的消費欄位</b>：客戶端實際讀取哪些回傳鍵，屬下一輪靜態取證題目；在取得清單前，服務端回應形狀只能以最小必要集合處理。</li>
+    </ul>
+
+    <footer>
+        <p><strong>LM-Project</strong> ｜ 篇章 2：會話篇 ｜ 專案發起人：<strong>Enos</strong></p>
+        <p>LM-Project Independent Lab ｜ Blue-Team Reference</p>
+    </footer>
+</div>
+</body>
+</html>

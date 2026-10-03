@@ -9,7 +9,8 @@
 | 頁面 | 閱讀重點 |
 |---|---|
 | [首頁](index.html) | 研究範圍、證據邊界，以及紅側視角到藍側檢查的總覽。 |
-| [Wire 協定與 Protobuf 入門](PROTOBUF-ARCHITECTURE-AND-REVERSE-ENGINEERING-GUIDE.html) | WireType、巢狀訊息、解碼範例與 R1–R5 本地契約復原路徑；相應的服務端拒絕、授權和遙測建議。 |
+| [篇章 1：Wire 協定與 Protobuf 入門](PROTOBUF-ARCHITECTURE-AND-REVERSE-ENGINEERING-GUIDE.html) | WireType、巢狀訊息、解碼範例與 R1–R5 本地契約復原路徑；相應的服務端拒絕、授權和遙測建議。 |
+| [篇章 2：會話與身份鏈](SESSION-IDENTITY-AND-STATE-MACHINE.html) | 登入鏈的站點形狀、三種易被誤判為「已授權」的訊號、供應商憑證與玩家會話的用途隔離，以及以回應層 Profile 相容多版本的規則；附藍隊檢查清單。 |
 | [篇章 3：移動節奏與持久化](MOVEMENT-PACING-AND-PERSISTENCE.html) | 自建環境的步頻、路徑接續與儲存成本；速率、路徑、版本柵欄與寫入合併的藍側檢查。 |
 | [篇章 4：配點與加成契約](STAT-ALLOCATION-AND-BONUS-CONTRACT.html) | 狀態投影及配點不變量；自建角色的點數、擁有權與提交後狀態核對。 |
 
@@ -17,7 +18,7 @@
 
 ## 手機與離線閱讀
 
-- 四頁都有行動版 viewport 和響應式樣式；手機直向閱讀時，寬表格和程式碼區塊可在**區塊內左右滑動**，正文不需要整頁橫向拖移。
+- 五頁都有行動版 viewport 和響應式樣式；手機直向閱讀時，寬表格和程式碼區塊可在**區塊內左右滑動**，正文不需要整頁橫向拖移。
 - 直接開啟 `index.html` 即可離線閱讀；頁面使用內嵌 CSS、原生 HTML，無外部字型或 CDN 相依。也可只在本機預覽：
 
   ```sh
@@ -28,4 +29,4 @@
 
 ## 檔案與發布邊界
 
-本目錄包含 `index.html`、上述三篇 HTML、此 `README.md` 與 `.nojekyll`；沒有宣稱存在的 Markdown 版指引。`.nojekyll` 僅供日後採用 GitHub Pages 時避免 Jekyll 處理，**檔案存在不代表已發布**。發布前須由維護者另外檢查內容、網址和公開範圍；本 README 不會自動更新已公開的倉庫。
+本目錄包含 `index.html`、上述四篇 HTML、此 `README.md` 與 `.nojekyll`；沒有宣稱存在的 Markdown 版指引。`.nojekyll` 僅供日後採用 GitHub Pages 時避免 Jekyll 處理，**檔案存在不代表已發布**。發布前須由維護者另外檢查內容、網址和公開範圍；本 README 不會自動更新已公開的倉庫。
